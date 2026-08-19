@@ -52,6 +52,11 @@ const reimagineBody = await readJson("examples/reimagine/paper-journey.request.j
 const reimagineRendererSnapshot = await readJson("examples/reimagine/paper-journey.renderer-request.json");
 const reimagineRequest = {skill: reimagineSkill, ...reimagineBody};
 
+const baselineSkill = await readJson("examples/baseline/simple-film/simple-film.skill.json");
+const baselineBody = await readJson("examples/baseline/simple-film/simple-film.request.json");
+const baselineRendererSnapshot = await readJson("examples/baseline/simple-film/simple-film.renderer-request.json");
+const baselineRequest = {skill: baselineSkill, ...baselineBody};
+
 test("Core Compiler and GPT Image Adapter expose separate module surfaces", async () => {
   const core = await import("../src/compiler.mjs");
   const adapter = await import("../src/adapters/openai-gpt-image-2.mjs");
@@ -65,8 +70,8 @@ test("Core Compiler and GPT Image Adapter expose separate module surfaces", asyn
   assert.equal(typeof compatibilityFacade.renderWithOpenAIGptImage2, "function");
 });
 
-test("Preserve and minimal Reimagine fixtures satisfy all public schemas", () => {
-  for (const request of [preserveRequest, reimagineRequest]) {
+test("Preserve, minimal Reimagine, and Baseline fixtures satisfy all public schemas", () => {
+  for (const request of [preserveRequest, reimagineRequest, baselineRequest]) {
     assertSchema(ajv, SCHEMA_IDS.skill, request.skill);
     assertSchema(ajv, SCHEMA_IDS.compileRequest, request);
     validateCompileRequestSemantics(request);
@@ -89,6 +94,9 @@ test("CreativePlan is deterministic and contains no provider prompt or model", (
   assert.equal(containsKey(first, "prompt"), false);
   assert.equal(containsKey(first, "provider"), false);
   assert.equal(containsKey(first, "model"), false);
+  assert.equal(containsKey(first, "endpoint"), false);
+  assert.equal(containsKey(first, "adapter_id"), false);
+  assert.deepEqual(renderWithOpenAIGptImage2(first), renderWithOpenAIGptImage2(second));
 });
 
 test("UserFacts, UserContent, and UserControls are separate contracts", () => {
@@ -97,7 +105,7 @@ test("UserFacts, UserContent, and UserControls are separate contracts", () => {
   assert.deepEqual(locations, [{path: "scene.location", value: "Shanghai", source: "user_fact"}]);
   assert.equal(plan.resolved_facts.some((fact) => fact.value === "Beijing"), false);
   assert.equal(plan.analysis_unknowns.some((item) => item.path === "scene.date"), false);
-  assert.equal(plan.analysis_unknowns.some((item) => item.path === "scene.weather"), true);
+  assert.equal(plan.analysis_unknowns.some((item) => item.path === "scene.weather"), false);
   assert.equal(plan.decisions.typography.language, "zh-CN");
   assert.equal(plan.diagnostics.some((item) => item.code === "W_USER_FACT_OVERRIDES_ANALYSIS"), true);
   assert.equal(plan.resolved_facts.find((fact) => fact.path === "typography.content.title").source, "user_content");
@@ -109,6 +117,10 @@ test("UserFacts, UserContent, and UserControls are separate contracts", () => {
   const factsInsideContent = deepClone(preserveRequest);
   factsInsideContent.user_content.location = "wrong layer";
   assert.equal(schemaAccepts(ajv, SCHEMA_IDS.compileRequest, factsInsideContent), false);
+
+  const unsupportedCaption = deepClone(preserveRequest);
+  unsupportedCaption.user_content.copy.caption = "v0.1 does not support this";
+  assert.equal(schemaAccepts(ajv, SCHEMA_IDS.compileRequest, unsupportedCaption), false);
 });
 
 test("Rule ids and read/write paths are stable and whitelisted", () => {
@@ -131,6 +143,25 @@ test("Rule ids and read/write paths are stable and whitelisted", () => {
   const controlOverride = deepClone(preserveSkill);
   controlOverride.rules[0].then = [{op: "set", path: "plan.output.aspect_ratio", value: "1:1"}];
   expectSpecError(() => validateSkillSemantics(controlOverride), "E_RULE_WRITES_AUTHORITATIVE_PATH");
+
+  for (const path of ["plan.typography.mode", "plan.typography.rendering"]) {
+    const authoritativeOverride = deepClone(preserveSkill);
+    authoritativeOverride.rules[0].then = [{op: "set", path, value: "none"}];
+    expectSpecError(() => validateSkillSemantics(authoritativeOverride), "E_RULE_WRITES_AUTHORITATIVE_PATH");
+  }
+});
+
+test("creative_intensity is an Adaptive Control interpreted by Skill Rules", () => {
+  const lowIntensity = deepClone(preserveRequest);
+  lowIntensity.user_controls.creative_intensity = 0.3;
+  assert.equal(compileCreativePlan(lowIntensity).decisions.visual.texture, "subtle-uncoated-paper");
+
+  const highIntensity = deepClone(preserveRequest);
+  highIntensity.user_controls.creative_intensity = 0.9;
+  assert.equal(
+    compileCreativePlan(highIntensity).decisions.visual.texture,
+    "layered-uncoated-paper-with-light-registration-shift"
+  );
 });
 
 test("Structured targets produce deterministic preservation/transformation conflicts", () => {
@@ -184,6 +215,10 @@ test("Applicability evaluates analysis inputs as matched, unmatched, or unknown"
     path: "composition.negative_space_ratio",
     reason: "The frame boundary is ambiguous."
   });
+  preferredUnknown.photo_analysis.unknowns.push({
+    path: "mood.tone",
+    reason: "Mood cannot be inferred without its observation basis."
+  });
   const conditional = evaluateApplicability(preferredUnknown);
   assert.equal(conditional.status, "conditional");
   assert.equal(conditional.score, 1);
@@ -207,6 +242,94 @@ test("Applicability evaluates analysis inputs as matched, unmatched, or unknown"
   const blocked = evaluateApplicability(requiredUnknown);
   assert.equal(blocked.status, "not_applicable");
   assert.deepEqual(blocked.unknown_requirements, ["travel-scene"]);
+});
+
+test("Rule comparisons never interpret unknown as a negative fact", () => {
+  const unknownRequest = deepClone(reimagineRequest);
+  unknownRequest.photo_analysis.inferences = unknownRequest.photo_analysis.inferences.filter(
+    (item) => item.path !== "mood.tone"
+  );
+  unknownRequest.photo_analysis.unknowns.push({path: "mood.tone", reason: "Tone is ambiguous."});
+  unknownRequest.skill.rules = [
+    {
+      rule_id: "unknown-neq-must-not-match",
+      priority: 10,
+      when: {path: "analysis.inferences.mood.tone", op: "neq", value: "loud"},
+      then: [{op: "set", path: "plan.visual.accent_color", value: "invalid-neq"}]
+    },
+    {
+      rule_id: "unknown-not-in-must-not-match",
+      priority: 20,
+      when: {path: "analysis.inferences.mood.tone", op: "not_in", value: ["loud"]},
+      then: [{op: "set", path: "plan.visual.texture", value: "invalid-not-in"}]
+    },
+    {
+      rule_id: "known-path-is-not-unknown",
+      priority: 30,
+      when: {path: "analysis.unknowns.scene.type", op: "exists"},
+      then: [{op: "set", path: "plan.composition.layout", value: "invalid-exists"}]
+    },
+    {
+      rule_id: "declared-unknown-exists",
+      priority: 40,
+      when: {path: "analysis.unknowns.mood.tone", op: "exists"},
+      then: [{op: "set", path: "plan.visual.mood", value: "explicitly-unknown"}]
+    },
+    {
+      rule_id: "negated-unknown-must-not-match",
+      priority: 50,
+      when: {not: {path: "analysis.inferences.mood.tone", op: "eq", value: "loud"}},
+      then: [{op: "set", path: "plan.composition.subject_scale", value: 0.99}]
+    }
+  ];
+
+  const unknownPlan = compileCreativePlan(unknownRequest);
+  assert.equal(unknownPlan.decisions.visual.accent_color, "sun-yellow");
+  assert.equal(unknownPlan.decisions.visual.texture, "cut-paper-fibers");
+  assert.equal(unknownPlan.decisions.composition.layout, "source-structure");
+  assert.equal(unknownPlan.decisions.composition.subject_scale, 0.55);
+  assert.equal(unknownPlan.decisions.visual.mood, "explicitly-unknown");
+
+  const knownRequest = deepClone(reimagineRequest);
+  knownRequest.skill.rules = [
+    {
+      rule_id: "known-eq",
+      priority: 10,
+      when: {path: "analysis.inferences.mood.tone", op: "eq", value: "quiet"},
+      then: [{op: "set", path: "plan.visual.accent_color", value: "known-eq"}]
+    },
+    {
+      rule_id: "known-neq",
+      priority: 20,
+      when: {path: "analysis.inferences.mood.tone", op: "neq", value: "loud"},
+      then: [{op: "set", path: "plan.visual.texture", value: "known-neq"}]
+    }
+  ];
+  const knownPlan = compileCreativePlan(knownRequest);
+  assert.equal(knownPlan.decisions.visual.accent_color, "known-eq");
+  assert.equal(knownPlan.decisions.visual.texture, "known-neq");
+});
+
+test("analysis_requirements is the Skill data boundary", () => {
+  const withUndeclared = deepClone(reimagineRequest);
+  withUndeclared.photo_analysis.observations.push({
+    path: "subject.age_estimate",
+    value: "UNDECLARED_PRIVATE_VALUE",
+    confidence: 0.99
+  });
+  const plan = compileCreativePlan(withUndeclared);
+  const rendererRequest = renderWithOpenAIGptImage2(plan);
+  assert.equal(plan.resolved_facts.some((fact) => fact.path === "subject.age_estimate"), false);
+  assert.doesNotMatch(rendererRequest.prompt, /UNDECLARED_PRIVATE_VALUE/);
+
+  const missingRequired = deepClone(reimagineRequest);
+  missingRequired.photo_analysis.observations = missingRequired.photo_analysis.observations.filter(
+    (item) => item.path !== "color.dominant"
+  );
+  expectSpecError(
+    () => validateCompileRequestSemantics(missingRequired),
+    "E_ANALYSIS_REQUIRED_PATH_MISSING"
+  );
 });
 
 test("PhotoAnalysis cannot represent the same semantic path as known and unknown", () => {
@@ -239,13 +362,22 @@ test("Inference basis forms a directed acyclic graph", () => {
   expectSpecError(() => validateCompileRequestSemantics(cyclic), "E_INFERENCE_CYCLE");
 });
 
+test("input_profile rejects min_images greater than max_images", () => {
+  const invalid = deepClone(preserveSkill);
+  invalid.input_profile.min_images = 2;
+  invalid.input_profile.max_images = 1;
+  expectSpecError(() => validateSkillSemantics(invalid), "E_INPUT_PROFILE_IMAGE_RANGE");
+});
+
 test("Renderer Adapter owns provider prompt compilation and matches snapshots", () => {
   const preserveRender = renderWithOpenAIGptImage2(compileCreativePlan(preserveRequest));
   const reimagineRender = renderWithOpenAIGptImage2(compileCreativePlan(reimagineRequest));
+  const baselineRender = renderWithOpenAIGptImage2(compileCreativePlan(baselineRequest));
   assert.deepEqual(preserveRender, preserveRendererSnapshot);
   assert.deepEqual(reimagineRender, reimagineRendererSnapshot);
+  assert.deepEqual(baselineRender, baselineRendererSnapshot);
   assert.match(preserveRender.prompt, /TYPOGRAPHY/);
-  assert.doesNotMatch(reimagineRender.prompt, /TYPOGRAPHY/);
+  assert.match(reimagineRender.prompt, /NO VISIBLE TYPOGRAPHY/);
   assert.equal(Object.hasOwn(preserveRender, "input_fidelity"), false);
 
   const withForbiddenParameter = {...preserveRender, input_fidelity: "high"};
@@ -271,7 +403,14 @@ test("Typography reserves model, postprocess, and none rendering strategies", ()
 
   const noneRender = renderWithOpenAIGptImage2(compileCreativePlan(reimagineRequest));
   assert.equal(noneRender.typography_strategy, "none");
-  assert.doesNotMatch(noneRender.prompt, /TYPOGRAPHY/);
+  assert.match(noneRender.prompt, /NO VISIBLE TYPOGRAPHY/);
+
+  const noneWithCopy = deepClone(preserveRequest);
+  noneWithCopy.user_controls.text_mode = "none";
+  noneWithCopy.user_controls.typography_rendering = "none";
+  const noneWithCopyRender = renderWithOpenAIGptImage2(compileCreativePlan(noneWithCopy));
+  assert.match(noneWithCopyRender.prompt, /NO VISIBLE TYPOGRAPHY/);
+  assert.doesNotMatch(noneWithCopyRender.prompt, /夏日散步|Shanghai · 2026/);
 
   const inconsistent = deepClone(preserveRequest);
   inconsistent.user_controls.text_mode = "none";

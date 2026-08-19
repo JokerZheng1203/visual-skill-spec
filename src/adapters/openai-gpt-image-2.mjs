@@ -31,12 +31,15 @@ function targetInstruction(item, kind) {
 
 export function renderWithOpenAIGptImage2(creativePlan) {
   const decisions = creativePlan.decisions;
+  const sourceFacts = decisions.typography.rendering === "none"
+    ? creativePlan.resolved_facts.filter((fact) => !fact.path.startsWith("typography.content."))
+    : creativePlan.resolved_facts;
   const sections = [
     "CREATIVE OBJECTIVE",
     decisions.objective,
     "",
     "SOURCE FACTS",
-    ...creativePlan.resolved_facts.map((fact) => `- ${fact.path}: ${formatValue(fact.value)} [${fact.source}]`),
+    ...sourceFacts.map((fact) => `- ${fact.path}: ${formatValue(fact.value)} [${fact.source}]`),
     "",
     "PRESERVATION CONSTRAINTS",
     ...creativePlan.preservation.map((item) => targetInstruction(item, "preserve")),
@@ -74,6 +77,13 @@ export function renderWithOpenAIGptImage2(creativePlan) {
       "TYPOGRAPHY RESERVED FOR POSTPROCESS",
       "- do not render any text in the generated image",
       "- preserve a clean area for deterministic text compositing"
+    );
+  } else {
+    sections.push(
+      "",
+      "NO VISIBLE TYPOGRAPHY",
+      "- do not add titles, captions, labels, logos, watermarks, decorative lettering, or invented written content",
+      "- preserve real source text only when it belongs to an existing photographed object; do not erase source text by default"
     );
   }
 

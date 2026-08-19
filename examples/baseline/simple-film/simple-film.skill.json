@@ -1,0 +1,136 @@
+{
+  "spec_version": "0.1.0",
+  "metadata": {
+    "id": "simple-film",
+    "name": "Simple Film",
+    "version": "0.1.0",
+    "description": "Applies a restrained film-like tone while keeping source composition and factual content unchanged.",
+    "tags": ["film", "baseline", "preserve"]
+  },
+  "provenance": {
+    "origin": "original",
+    "commercial_use_basis": "Original first-party baseline specification.",
+    "source_refs": []
+  },
+  "experiment_metadata": {
+    "role": "baseline",
+    "experiment_id": "skill-value-v0"
+  },
+  "family": "preserve",
+  "input_profile": {
+    "min_images": 1,
+    "max_images": 1,
+    "accepted_content": ["travel", "city", "street", "landscape", "portrait"]
+  },
+  "analysis_requirements": {
+    "observation_paths": ["color.dominant"],
+    "inference_paths": ["scene.type"]
+  },
+  "defaults": {
+    "objective": "Apply a subtle film-like color treatment without changing the source subject, scene, composition, or facts.",
+    "composition": {
+      "layout": "preserve-source-frame",
+      "negative_space_strategy": "preserve-source",
+      "subject_scale": 0.5
+    },
+    "visual": {
+      "color_strategy": "subtle-film-tone",
+      "accent_color": "none",
+      "texture": "light-film-grain",
+      "lighting": "preserve-source-light",
+      "mood": "natural",
+      "graphic_marks": []
+    },
+    "typography": {
+      "mode": "none",
+      "rendering": "none",
+      "language": "en"
+    },
+    "output": {
+      "aspect_ratio": "2:3",
+      "quality_tier": "standard",
+      "format": "jpeg",
+      "background": "opaque"
+    },
+    "notes": ["Do not add layout elements, graphic marks, text, labels, or narrative details."]
+  },
+  "applicability": {
+    "requirements": [
+      {
+        "requirement_id": "supported-scene",
+        "path": "analysis.inferences.scene.type",
+        "op": "in",
+        "value": ["travel", "city", "street", "landscape", "portrait"],
+        "severity": "required",
+        "weight": 1,
+        "reason": "The source is a supported photographic scene.",
+        "on_unknown": "not_applicable"
+      }
+    ],
+    "thresholds": {
+      "applicable_min": 1,
+      "conditional_min": 0.5
+    }
+  },
+  "preservation": [
+    {
+      "constraint_id": "keep-person-identity",
+      "target": {"domain": "subject", "path": "subject.identity", "subject_ref": "primary-person"},
+      "strength": "hard",
+      "description": "Keep the primary person's identity and appearance unchanged."
+    },
+    {
+      "constraint_id": "keep-landmark",
+      "target": {"domain": "scene", "path": "scene.landmark"},
+      "strength": "hard",
+      "description": "Keep photographed architecture and landmarks unchanged."
+    },
+    {
+      "constraint_id": "keep-spatial-relations",
+      "target": {"domain": "composition", "path": "composition.spatial_relationships"},
+      "strength": "hard",
+      "description": "Keep the source framing and spatial relationships unchanged."
+    }
+  ],
+  "transformation": [
+    {
+      "constraint_id": "film-tone",
+      "target": {"domain": "color", "path": "color.palette"},
+      "mode": "allowed",
+      "description": "Apply only a restrained film-like tonal adjustment."
+    },
+    {
+      "constraint_id": "film-grain",
+      "target": {"domain": "material", "path": "material.texture"},
+      "mode": "allowed",
+      "description": "Add only light, uniform film grain."
+    }
+  ],
+  "visual_system": {
+    "palette": ["source colors with restrained film tone"],
+    "materials": ["light film grain"],
+    "graphic_language": ["none"]
+  },
+  "rules": [],
+  "renderer_requirements": {
+    "mode": "image_edit",
+    "high_fidelity_input": true,
+    "transparent_background": false
+  },
+  "evaluation": {
+    "quality_weights": {
+      "identity_preservation": 0.25,
+      "scene_fidelity": 0.25,
+      "composition": 0.15,
+      "style_consistency": 0.1,
+      "text_accuracy": 0,
+      "artifact_control": 0.15,
+      "aesthetic_quality": 0.1
+    },
+    "pass_threshold": 3.8,
+    "hard_fail_targets": [
+      {"domain": "subject", "path": "subject.identity", "subject_ref": "primary-person"},
+      {"domain": "scene", "path": "scene.landmark"}
+    ]
+  }
+}

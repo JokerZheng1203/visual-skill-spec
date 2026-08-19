@@ -40,7 +40,7 @@ CompileRequest = VisualSkill + UserFacts + UserContent + PhotoAnalysis
 三类用户输入必须分离：
 
 - `UserFacts`：现实事实，例如地点、日期和人物关系；
-- `UserContent`：用户提供的标题、副标题、caption 和内容语言；
+- `UserContent`：用户提供的标题、副标题和内容语言；v0.1 不支持 caption；
 - `UserControls`：用户显式选择的创意强度、文字模式、文字渲染策略和画布比例。
 
 任何字段不得为了方便而跨层复制。
@@ -66,13 +66,18 @@ UserFacts / UserContent > PhotoAnalysis observation > PhotoAnalysis inference
 3. 不得静默改写用户输入；
 4. 被用户输入解决的 unknown 不再进入 CreativePlan。
 
+UserControls 分为两类：
+
+- **Authoritative Controls**：`aspect_ratio`、`text_mode`、`typography_rendering`。它们是确定性约束，Skill Rule 不得覆盖，由 Core 在规则执行后应用；
+- **Adaptive Controls**：`creative_intensity`。Skill Rule 可以读取并自行映射为 CreativePlan 决策；Core 不增加 `plan.creative_intensity`，也不执行无语义的最终覆盖。
+
 生成决策的最终优先级固定为：
 
 ```text
 Runtime Safety > UserControls > UserContent > Skill Rules > SkillDefaults
 ```
 
-Core 先复制 defaults，再执行 Skill Rules，然后依次应用 UserContent、UserControls 和 Runtime Safety。
+Core 先复制 defaults，再执行 Skill Rules，然后依次应用 UserContent、Authoritative UserControls 和 Runtime Safety。Adaptive Controls 在规则求值时生效。
 
 Skill Rule 不得写入 `plan.typography.mode`、`plan.typography.rendering`、`plan.typography.language` 或 `plan.output.aspect_ratio` 等用户权威路径。此类 Skill 在语义校验阶段返回 `E_RULE_WRITES_AUTHORITATIVE_PATH`，不能运行后静默覆盖。
 
@@ -91,6 +96,8 @@ Core 不固定 confidence 阈值。CompileRequest 必须携带 `AnalysisPolicy`�
 同一路径不得同时出现在 observations、inferences 或 unknowns 的多个集合中。每个 inference basis 必须指向实际存在的 observation 或 inference。
 
 全部 inference path 构成有向依赖图。该图必须是 DAG：允许前向引用，但禁止自环和多节点循环；检测到循环返回 `E_INFERENCE_CYCLE`。
+
+`analysis_requirements` 是 Skill 的数据边界。只有声明过的 observation/inference path 可以进入 CreativePlan、Rule Engine 和 Renderer prompt；上游 Global Scene Card 中未声明的数据不得被该 Skill 消费。每个声明 path 必须在 PhotoAnalysis 中表示为 observation、inference 或 unknown，否则返回 `E_ANALYSIS_REQUIRED_PATH_MISSING`。
 
 ## 5. SkillDefaults 与声明式规则
 
@@ -172,6 +179,8 @@ Typography 同时包含内容模式与渲染策略：
 
 `text_mode: none` 必须与 `typography_rendering: none` 配对；其他 text mode 必须选择 model 或 postprocess。Skill Rule 不得覆盖用户选择。
 
+`none` 不等于“不要求文字”。Adapter 必须明确禁止新增标题、caption、label、logo、watermark、装饰字形或虚构文字，同时不得把该指令解释为无条件擦除源照片中真实存在的招牌或道路文字。
+
 ## 10. Reference Implementation Runtime
 
 公共入口位于 `src/index.mjs`。`createReferenceRuntime()` 创建宿主编排层，按固定顺序执行：
@@ -225,6 +234,8 @@ Runtime Safety 可以覆盖 SkillDefaults、Skill Rules、UserContent 和 UserCo
 - `E_EVALUATION_WEIGHT_TOTAL`
 - `E_EVALUATION_NO_SCORABLE_WEIGHT`
 - `E_RUNTIME_SAFETY_BLOCKED`
+- `E_ANALYSIS_REQUIRED_PATH_MISSING`
+- `E_INPUT_PROFILE_IMAGE_RANGE`
 - `E_SCHEMA_VALIDATION`
 - `E_ADAPTER_INVALID`
 - `E_ADAPTER_DUPLICATE`

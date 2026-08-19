@@ -35,8 +35,7 @@
           "additionalProperties": false,
           "properties": {
             "title": {"type": "string"},
-            "subtitle": {"type": "string"},
-            "caption": {"type": "string"}
+            "subtitle": {"type": "string"}
           }
         }
       }

@@ -1,0 +1,14 @@
+{
+  "adapter_id": "openai.gpt-image-2",
+  "provider": "openai",
+  "endpoint": "/v1/images/edits",
+  "model": "gpt-image-2-2026-04-21",
+  "input_image_role": "source_photo",
+  "prompt": "CREATIVE OBJECTIVE\nApply a subtle film-like color treatment without changing the source subject, scene, composition, or facts.\n\nSOURCE FACTS\n- scene.location: Shanghai [user_fact]\n- scene.date: 2026-08-12 [user_fact]\n- subject.relationships: primary-person is the user [user_fact]\n- typography.language: zh-CN [user_content]\n- color.dominant: red [observation]\n- scene.type: city [inference]\n\nPRESERVATION CONSTRAINTS\n- subject.identity for primary-person: hard — Keep the primary person's identity and appearance unchanged.\n- scene.landmark: hard — Keep photographed architecture and landmarks unchanged.\n- composition.spatial_relationships: hard — Keep the source framing and spatial relationships unchanged.\n\nTRANSFORMATION CONSTRAINTS\n- color.palette: allowed — Apply only a restrained film-like tonal adjustment.\n- material.texture: allowed — Add only light, uniform film grain.\n\nCOMPOSITION\n- layout: preserve-source-frame\n- negative space: preserve-source\n- subject scale: 0.5\n\nVISUAL LANGUAGE\n- color strategy: subtle-film-tone\n- accent color: none\n- texture: light-film-grain\n- lighting: preserve-source-light\n- mood: natural\n- graphic marks: none\n\nNO VISIBLE TYPOGRAPHY\n- do not add titles, captions, labels, logos, watermarks, decorative lettering, or invented written content\n- preserve real source text only when it belongs to an existing photographed object; do not erase source text by default\n\nOUTPUT\n- aspect ratio: 2:3\n- background: opaque\n\nADDITIONAL CONSTRAINTS\n- Do not add layout elements, graphic marks, text, labels, or narrative details.",
+  "typography_strategy": "none",
+  "size": "1024x1536",
+  "quality": "medium",
+  "output_format": "jpeg",
+  "background": "opaque",
+  "output_compression": 90
+}

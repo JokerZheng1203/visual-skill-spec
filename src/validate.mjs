@@ -21,17 +21,19 @@ assertSchema(
   "reference analysis policy"
 );
 const fixtureRoots = [
-  ["preserve", "travel-editorial"],
-  ["reimagine", "paper-journey"]
+  "preserve/travel-editorial",
+  "reimagine/paper-journey",
+  "baseline/simple-film/simple-film"
 ];
 
-for (const [family, name] of fixtureRoots) {
-  const skill = await readJson(`examples/${family}/${name}.skill.json`);
-  const requestBody = await readJson(`examples/${family}/${name}.request.json`);
+for (const fixtureRoot of fixtureRoots) {
+  const name = fixtureRoot.split("/").at(-1);
+  const skill = await readJson(`examples/${fixtureRoot}.skill.json`);
+  const requestBody = await readJson(`examples/${fixtureRoot}.request.json`);
   const request = {skill, ...requestBody};
 
   assertSchema(ajv, SCHEMA_IDS.skill, skill, `${name} skill`);
   assertSchema(ajv, SCHEMA_IDS.compileRequest, request, `${name} compile request`);
   runtime.execute(request);
-  console.log(`validated ${family}/${name}`);
+  console.log(`validated ${fixtureRoot}`);
 }

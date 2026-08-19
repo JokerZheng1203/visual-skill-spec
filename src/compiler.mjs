@@ -7,8 +7,7 @@ const USER_FACT_PATHS = new Set([
 const USER_CONTENT_PATHS = new Set([
   "user_content.language",
   "user_content.copy.title",
-  "user_content.copy.subtitle",
-  "user_content.copy.caption"
+  "user_content.copy.subtitle"
 ]);
 
 const CONTROL_PATHS = new Set([
@@ -60,8 +59,7 @@ const USER_FACT_SEMANTIC_PATHS = new Map([
 const USER_CONTENT_SEMANTIC_PATHS = new Map([
   ["language", "typography.language"],
   ["copy.title", "typography.content.title"],
-  ["copy.subtitle", "typography.content.subtitle"],
-  ["copy.caption", "typography.content.caption"]
+  ["copy.subtitle", "typography.content.subtitle"]
 ]);
 
 export class SpecError extends Error {
@@ -215,6 +213,14 @@ export function validateSkillSemantics(skill) {
     throw new SpecError("E_APPLICABILITY_THRESHOLDS", "conditional_min cannot exceed applicable_min");
   }
 
+  if (skill.input_profile.min_images > skill.input_profile.max_images) {
+    throw new SpecError(
+      "E_INPUT_PROFILE_IMAGE_RANGE",
+      "input_profile.min_images cannot exceed input_profile.max_images",
+      {min_images: skill.input_profile.min_images, max_images: skill.input_profile.max_images}
+    );
+  }
+
   if (skill.provenance.origin === "licensed" && skill.provenance.source_refs.length === 0) {
     throw new SpecError("E_LICENSE_SOURCE_REQUIRED", "Licensed skills require at least one source reference");
   }
@@ -292,6 +298,19 @@ export function validateCompileRequestSemantics(request) {
     unknownPaths.add(item.path);
   }
 
+  for (const path of [
+    ...request.skill.analysis_requirements.observation_paths,
+    ...request.skill.analysis_requirements.inference_paths
+  ]) {
+    if (!knownEvidence.has(path) && !unknownPaths.has(path)) {
+      throw new SpecError(
+        "E_ANALYSIS_REQUIRED_PATH_MISSING",
+        `Required analysis path is neither known nor unknown: ${path}`,
+        {path}
+      );
+    }
+  }
+
   for (const inference of request.photo_analysis.inferences) {
     for (const basis of inference.basis) {
       if (!knownEvidence.has(basis)) {
@@ -359,12 +378,13 @@ function getInputValue(request, path) {
   if (!match) return undefined;
   const [, kind, semanticPath] = match;
   if (kind === "unknowns") {
-    return request.photo_analysis.unknowns.some((entry) => entry.path === semanticPath);
+    return request.photo_analysis.unknowns.some((entry) => entry.path === semanticPath) ? true : undefined;
   }
   return evidenceIndex(request.photo_analysis, kind).get(semanticPath)?.value;
 }
 
 function compare(actual, op, expected) {
+  if (op !== "exists" && actual === undefined) return false;
   switch (op) {
     case "exists": return actual !== undefined;
     case "eq": return sameValue(actual, expected);
@@ -380,10 +400,23 @@ function compare(actual, op, expected) {
 }
 
 function evaluateCondition(request, condition) {
-  if (Object.hasOwn(condition, "all")) return condition.all.every((child) => evaluateCondition(request, child));
-  if (Object.hasOwn(condition, "any")) return condition.any.some((child) => evaluateCondition(request, child));
-  if (Object.hasOwn(condition, "not")) return !evaluateCondition(request, condition.not);
-  return compare(getInputValue(request, condition.path), condition.op, condition.value);
+  if (Object.hasOwn(condition, "all")) {
+    const results = condition.all.map((child) => evaluateCondition(request, child));
+    if (results.includes(false)) return false;
+    return results.includes(undefined) ? undefined : true;
+  }
+  if (Object.hasOwn(condition, "any")) {
+    const results = condition.any.map((child) => evaluateCondition(request, child));
+    if (results.includes(true)) return true;
+    return results.includes(undefined) ? undefined : false;
+  }
+  if (Object.hasOwn(condition, "not")) {
+    const result = evaluateCondition(request, condition.not);
+    return result === undefined ? undefined : !result;
+  }
+  const actual = getInputValue(request, condition.path);
+  if (condition.op !== "exists" && actual === undefined) return undefined;
+  return compare(actual, condition.op, condition.value);
 }
 
 function pathIsDeclaredUnknown(request, readPath) {
@@ -476,8 +509,8 @@ function evaluateApplicabilityValidated(request) {
 }
 
 export function evaluateApplicability(request) {
-  validateCompileRequestSemantics(request);
   assertRuntimeSafetyAllowsCompilation(request);
+  validateCompileRequestSemantics(request);
   return evaluateApplicabilityValidated(request);
 }
 
@@ -505,8 +538,13 @@ function resolveFacts(request, diagnostics) {
   const userByPath = new Map([...userEntries, ...contentEntries].map((entry) => [entry.path, entry]));
   const resolved = [...userEntries, ...contentEntries];
 
+  const declaredPaths = {
+    observations: new Set(request.skill.analysis_requirements.observation_paths),
+    inferences: new Set(request.skill.analysis_requirements.inference_paths)
+  };
   for (const kind of ["observations", "inferences"]) {
     for (const item of request.photo_analysis[kind]) {
+      if (!declaredPaths[kind].has(item.path)) continue;
       const userFact = userByPath.get(item.path);
       if (userFact) {
         if (!sameValue(userFact.value, item.value)) {
@@ -567,8 +605,8 @@ function applyRuntimeSafety(decisions, runtimeSafety, diagnostics) {
 }
 
 export function compileCreativePlan(request) {
-  validateCompileRequestSemantics(request);
   assertRuntimeSafetyAllowsCompilation(request);
+  validateCompileRequestSemantics(request);
   const applicability = evaluateApplicabilityValidated(request);
   if (applicability.status === "not_applicable") {
     throw new SpecError("E_NOT_APPLICABLE", "Skill is not applicable to this input", {applicability});
@@ -592,7 +630,7 @@ export function compileCreativePlan(request) {
     .sort((left, right) => left.rule.priority - right.rule.priority || left.index - right.index);
 
   for (const {rule} of orderedRules) {
-    const matched = evaluateCondition(request, rule.when);
+    const matched = evaluateCondition(request, rule.when) === true;
     const writes = [];
     if (matched) {
       for (const action of rule.then) {
@@ -609,7 +647,13 @@ export function compileCreativePlan(request) {
   applyUserControls(decisions, request);
   const safetyDecision = applyRuntimeSafety(decisions, request.runtime_safety, diagnostics);
 
-  const unresolvedUnknowns = request.photo_analysis.unknowns.filter((item) => !userByPath.has(item.path));
+  const declaredAnalysisPaths = new Set([
+    ...request.skill.analysis_requirements.observation_paths,
+    ...request.skill.analysis_requirements.inference_paths
+  ]);
+  const unresolvedUnknowns = request.photo_analysis.unknowns.filter(
+    (item) => declaredAnalysisPaths.has(item.path) && !userByPath.has(item.path)
+  );
 
   return {
     spec_version: "0.1.0",

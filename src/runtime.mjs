@@ -1,4 +1,4 @@
-import {compileCreativePlan, validateCompileRequestSemantics} from "./compiler.mjs";
+import {compileCreativePlan} from "./compiler.mjs";
 import {
   OPENAI_GPT_IMAGE_2_ADAPTER_ID,
   openAIGptImage2Adapter
@@ -62,8 +62,6 @@ export class VisualSkillReferenceRuntime {
 
   compile(request) {
     assertSchema(this.#validator, SCHEMA_IDS.compileRequest, request, "compile request");
-    validateCompileRequestSemantics(request);
-
     const creativePlan = compileCreativePlan(request);
     assertSchema(
       this.#validator,

@@ -27,7 +27,7 @@ npm run validate
 npm test
 ```
 
-- `npm run validate`：校验 Preserve 与 Reimagine 示例、编译 CreativePlan，并校验 Renderer 请求。
+- `npm run validate`：校验 Preserve、Reimagine 与 Baseline 示例、编译 CreativePlan，并校验 Renderer 请求。
 - `npm test`：运行 Schema、语义冲突、applicability、确定性和快照测试。
 
 宿主应用通过 Reference Runtime 执行完整但不联网的管线：
@@ -57,6 +57,7 @@ result.renderer_request;
 - `src/reference-compiler.mjs`：仅用于旧导入路径的兼容 re-export。
 - `examples/preserve/`：完整 Travel Editorial 示例。
 - `examples/reimagine/`：最小 Paper Journey 示例。
+- `examples/baseline/simple-film/`：Gate 1 使用的 Simple Film 对照 fixture；Core family 仍为 `preserve`。
 - `tests/`：规范行为和反例测试。
 
 ## 当前边界

@@ -7,6 +7,7 @@ import {
   OPENAI_GPT_IMAGE_2_ADAPTER_ID,
   ReferenceRuntimeError,
   SchemaValidationError,
+  SpecError,
   VisualSkillReferenceRuntime,
   createReferenceRuntime
 } from "../src/index.mjs";
@@ -49,6 +50,21 @@ test("Reference Runtime rejects invalid input at the Schema boundary", async () 
       && error.schema_id === "urn:visual-skill:compile-request:v0.1.0"
       && error.errors.length > 0
     )
+  );
+});
+
+test("Reference Runtime short-circuits blocked Safety before Core semantics", async () => {
+  const runtime = await createReferenceRuntime({validator});
+  const blocked = structuredClone(request);
+  blocked.runtime_safety.blocked = true;
+  blocked.runtime_safety.reasons = ["Blocked by the active runtime policy."];
+  blocked.photo_analysis.observations = blocked.photo_analysis.observations.filter(
+    (item) => item.path !== "color.dominant"
+  );
+
+  assert.throws(
+    () => runtime.compile(blocked),
+    (error) => error instanceof SpecError && error.code === "E_RUNTIME_SAFETY_BLOCKED"
   );
 });
 

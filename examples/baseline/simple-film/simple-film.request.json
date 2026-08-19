@@ -1,0 +1,50 @@
+{
+  "user_facts": {
+    "location": "Shanghai",
+    "date": "2026-08-12",
+    "people_relationships": ["primary-person is the user"]
+  },
+  "user_content": {
+    "language": "zh-CN",
+    "copy": {
+      "title": "夏日散步",
+      "subtitle": "Shanghai · 2026"
+    }
+  },
+  "photo_analysis": {
+    "analysis_id": "analysis-travel-001",
+    "observations": [
+      {"path": "subject.people_count", "value": 1, "confidence": 0.99},
+      {"path": "composition.subject_occupancy", "value": 0.28, "confidence": 0.94},
+      {"path": "composition.negative_space_ratio", "value": 0.46, "confidence": 0.91},
+      {"path": "composition.spatial_relationships", "value": "person in lower-left, buildings receding to upper-right", "confidence": 0.9},
+      {"path": "color.dominant", "value": "red", "confidence": 0.86}
+    ],
+    "inferences": [
+      {"path": "scene.type", "value": "city", "confidence": 0.93, "basis": ["composition.spatial_relationships"]},
+      {"path": "scene.location", "value": "Beijing", "confidence": 0.62, "basis": ["composition.spatial_relationships"], "explanation": "Architectural resemblance only; user-provided location remains authoritative."},
+      {"path": "mood.tone", "value": "quiet", "confidence": 0.82, "basis": ["composition.negative_space_ratio"]},
+      {"path": "lighting.condition", "value": "soft-daylight", "confidence": 0.88, "basis": ["color.dominant"]}
+    ],
+    "unknowns": [
+      {"path": "scene.date", "reason": "A date cannot be established from pixels."},
+      {"path": "scene.weather", "reason": "The sky is not visible enough to infer weather."}
+    ]
+  },
+  "analysis_policy": {
+    "profile_id": "reference-balanced-v0",
+    "minimum_confidence": {"observation": 0.5, "inference": 0.6}
+  },
+  "user_controls": {
+    "creative_intensity": 0.3,
+    "text_mode": "none",
+    "typography_rendering": "none",
+    "aspect_ratio": "2:3"
+  },
+  "runtime_safety": {
+    "policy_id": "reference-image-safety-v0",
+    "blocked": false,
+    "reasons": [],
+    "overrides": []
+  }
+}
