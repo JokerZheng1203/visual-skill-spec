@@ -1,0 +1,108 @@
+{
+  "spec_version": "0.1.0",
+  "metadata": {
+    "id": "paper-journey",
+    "name": "Paper Journey",
+    "version": "0.1.0",
+    "description": "Reimagines a landscape as a layered paper illustration while retaining its spatial story.",
+    "tags": ["paper", "illustration", "reimagine"]
+  },
+  "provenance": {
+    "origin": "original",
+    "commercial_use_basis": "Original first-party specification and visual system.",
+    "source_refs": []
+  },
+  "family": "reimagine",
+  "input_profile": {
+    "min_images": 1,
+    "max_images": 1,
+    "accepted_content": ["travel", "landscape", "city"]
+  },
+  "analysis_requirements": {
+    "observation_paths": ["composition.spatial_relationships", "color.dominant"],
+    "inference_paths": ["scene.type", "mood.tone"]
+  },
+  "defaults": {
+    "objective": "Rebuild the source scene as a tactile layered-paper illustration without inventing narrative facts.",
+    "composition": {
+      "layout": "source-structure",
+      "negative_space_strategy": "simplify-into-paper-planes",
+      "subject_scale": 0.55
+    },
+    "visual": {
+      "color_strategy": "compressed-source-palette",
+      "accent_color": "sun-yellow",
+      "texture": "cut-paper-fibers",
+      "lighting": "shallow-layer-shadows",
+      "mood": "playful-observation",
+      "graphic_marks": []
+    },
+    "typography": {"mode": "none", "rendering": "none", "language": "en"},
+    "output": {"aspect_ratio": "1:1", "quality_tier": "standard", "format": "png", "background": "opaque"},
+    "notes": ["Do not add fictional place names or narrative text."]
+  },
+  "applicability": {
+    "requirements": [
+      {
+        "requirement_id": "readable-scene",
+        "path": "analysis.inferences.scene.type",
+        "op": "in",
+        "value": ["landscape", "city", "travel"],
+        "severity": "required",
+        "weight": 1,
+        "reason": "The source contains a readable environmental scene.",
+        "on_unknown": "not_applicable"
+      }
+    ],
+    "thresholds": {"applicable_min": 1, "conditional_min": 0.5}
+  },
+  "preservation": [
+    {
+      "constraint_id": "keep-scene-structure",
+      "target": {"domain": "composition", "path": "composition.spatial_relationships"},
+      "strength": "soft",
+      "description": "Keep the main foreground, middle-ground, and background relationship."
+    }
+  ],
+  "transformation": [
+    {
+      "constraint_id": "paper-material",
+      "target": {"domain": "material", "path": "material.texture"},
+      "mode": "required",
+      "description": "Transform all visible surfaces into layered cut paper."
+    },
+    {
+      "constraint_id": "palette-compression",
+      "target": {"domain": "color", "path": "color.palette"},
+      "mode": "required",
+      "description": "Compress the source palette into five paper colors."
+    }
+  ],
+  "visual_system": {
+    "palette": ["five source-derived colors"],
+    "materials": ["cut paper", "visible fibers"],
+    "graphic_language": ["layered silhouettes", "soft physical shadows"]
+  },
+  "rules": [
+    {
+      "rule_id": "quiet-scene",
+      "priority": 100,
+      "when": {"path": "analysis.inferences.mood.tone", "op": "eq", "value": "quiet"},
+      "then": [{"op": "set", "path": "plan.visual.mood", "value": "quiet-and-tactile"}]
+    }
+  ],
+  "renderer_requirements": {"mode": "image_edit", "high_fidelity_input": true, "transparent_background": false},
+  "evaluation": {
+    "quality_weights": {
+      "identity_preservation": 0,
+      "scene_fidelity": 0.15,
+      "composition": 0.2,
+      "style_consistency": 0.25,
+      "text_accuracy": 0,
+      "artifact_control": 0.15,
+      "aesthetic_quality": 0.25
+    },
+    "pass_threshold": 3.7,
+    "hard_fail_targets": [{"domain": "composition", "path": "composition.spatial_relationships"}]
+  }
+}

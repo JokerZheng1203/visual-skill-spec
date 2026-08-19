@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:visual-skill:creative-plan:v0.1.0",
+  "title": "CreativePlan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "spec_version",
+    "skill_ref",
+    "family",
+    "applicability",
+    "resolved_facts",
+    "preservation",
+    "transformation",
+    "decisions",
+    "analysis_unknowns",
+    "diagnostics",
+    "rule_trace",
+    "safety_decision",
+    "renderer_requirements",
+    "evaluation_policy"
+  ],
+  "properties": {
+    "spec_version": {"const": "0.1.0"},
+    "skill_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version"],
+      "properties": {
+        "id": {"type": "string"},
+        "version": {"type": "string"}
+      }
+    },
+    "family": {"enum": ["preserve", "reimagine"]},
+    "applicability": {"$ref": "urn:visual-skill:applicability-result:v0.1.0"},
+    "resolved_facts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "value", "source"],
+        "properties": {
+          "path": {"$ref": "urn:visual-skill:common:v0.1.0#/$defs/SemanticPath"},
+          "value": {},
+          "source": {"enum": ["user_fact", "user_content", "observation", "inference"]},
+          "confidence": {"type": "number", "minimum": 0, "maximum": 1}
+        }
+      }
+    },
+    "preservation": {"type": "array", "items": {"$ref": "urn:visual-skill:definition:v0.1.0#/properties/preservation/items"}},
+    "transformation": {"type": "array", "items": {"$ref": "urn:visual-skill:definition:v0.1.0#/properties/transformation/items"}},
+    "decisions": {"$ref": "urn:visual-skill:definition:v0.1.0#/$defs/PlanDecisions"},
+    "analysis_unknowns": {
+      "type": "array",
+      "items": {"$ref": "urn:visual-skill:compile-request:v0.1.0#/$defs/Unknown"}
+    },
+    "diagnostics": {"type": "array", "items": {"$ref": "urn:visual-skill:common:v0.1.0#/$defs/Diagnostic"}},
+    "rule_trace": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["rule_id", "matched", "writes"],
+        "properties": {
+          "rule_id": {"type": "string"},
+          "matched": {"type": "boolean"},
+          "writes": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "safety_decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policy_id", "applied_overrides", "reasons"],
+      "properties": {
+        "policy_id": {"type": "string"},
+        "applied_overrides": {"type": "array", "items": {"type": "string"}},
+        "reasons": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "renderer_requirements": {"$ref": "urn:visual-skill:definition:v0.1.0#/properties/renderer_requirements"},
+    "evaluation_policy": {"$ref": "urn:visual-skill:definition:v0.1.0#/properties/evaluation"}
+  }
+}

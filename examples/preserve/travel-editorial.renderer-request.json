@@ -1,0 +1,14 @@
+{
+  "adapter_id": "openai.gpt-image-2",
+  "provider": "openai",
+  "endpoint": "/v1/images/edits",
+  "model": "gpt-image-2-2026-04-21",
+  "input_image_role": "source_photo",
+  "prompt": "CREATIVE OBJECTIVE\nCreate a quiet editorial travel memory that remains recognizably grounded in the source photograph.\n\nSOURCE FACTS\n- scene.location: Shanghai [user_fact]\n- scene.date: 2026-08-12 [user_fact]\n- subject.relationships: primary-person is the user [user_fact]\n- typography.language: zh-CN [user_content]\n- typography.content.title: 夏日散步 [user_content]\n- typography.content.subtitle: Shanghai · 2026 [user_content]\n- subject.people_count: 1 [observation]\n- composition.subject_occupancy: 0.28 [observation]\n- composition.negative_space_ratio: 0.46 [observation]\n- composition.spatial_relationships: person in lower-left, buildings receding to upper-right [observation]\n- color.dominant: red [observation]\n- scene.type: city [inference]\n- mood.tone: quiet [inference]\n- lighting.condition: soft-daylight [inference]\n\nPRESERVATION CONSTRAINTS\n- subject.identity for primary-person: hard — Keep the primary person's identity and recognizable facial features.\n- scene.landmark: hard — Keep recognizable architecture and landmark silhouettes.\n- composition.spatial_relationships: soft — Retain the relationship between person, street, and buildings.\n\nTRANSFORMATION CONSTRAINTS\n- composition.framing: required — Reframe the source into an intentional editorial page.\n- material.texture: required — Introduce a restrained printed-paper surface.\n- typography.content: allowed — Use only user-provided copy.\n\nCOMPOSITION\n- layout: photo-anchor-with-quiet-field\n- negative space: retain-native-quiet-areas\n- subject scale: 0.42\n\nVISUAL LANGUAGE\n- color strategy: source-palette-with-one-accent\n- accent color: muted-blue\n- texture: layered-uncoated-paper-with-light-registration-shift\n- lighting: preserve-source-light\n- mood: observant-and-quiet\n- graphic marks: fine-rule, small-location-label\n\nTYPOGRAPHY\n- mode: custom\n- rendering: model\n- language: zh-CN\n- title: 夏日散步\n- subtitle: Shanghai · 2026\n\nOUTPUT\n- aspect ratio: 2:3\n- background: opaque\n\nUNRESOLVED FACTS\n- scene.weather: unknown; do not invent (The sky is not visible enough to infer weather.)\n\nADDITIONAL CONSTRAINTS\n- Do not invent logos, coordinates, dates, locations, or relationships.",
+  "typography_strategy": "model",
+  "size": "1024x1536",
+  "quality": "medium",
+  "output_format": "jpeg",
+  "background": "opaque",
+  "output_compression": 90
+}

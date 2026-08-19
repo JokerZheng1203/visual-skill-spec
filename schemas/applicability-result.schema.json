@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:visual-skill:applicability-result:v0.1.0",
+  "title": "ApplicabilityResult",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "score", "reasons", "requirement_results", "unmet_requirements", "unknown_requirements", "warnings"],
+  "properties": {
+    "status": {"enum": ["applicable", "conditional", "not_applicable"]},
+    "score": {"type": "number", "minimum": 0, "maximum": 1},
+    "reasons": {"type": "array", "items": {"type": "string"}},
+    "requirement_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["requirement_id", "state"],
+        "properties": {
+          "requirement_id": {"type": "string"},
+          "state": {"enum": ["matched", "unmatched", "unknown"]}
+        }
+      }
+    },
+    "unmet_requirements": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "unknown_requirements": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "warnings": {"type": "array", "items": {"type": "string"}}
+  }
+}

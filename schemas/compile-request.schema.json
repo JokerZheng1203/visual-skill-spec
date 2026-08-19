@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:visual-skill:compile-request:v0.1.0",
+  "title": "CompileRequest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["skill", "user_facts", "user_content", "photo_analysis", "analysis_policy", "user_controls", "runtime_safety"],
+  "properties": {
+    "skill": {"$ref": "urn:visual-skill:definition:v0.1.0"},
+    "user_facts": {"$ref": "#/$defs/UserFacts"},
+    "user_content": {"$ref": "#/$defs/UserContent"},
+    "photo_analysis": {"$ref": "#/$defs/PhotoAnalysis"},
+    "analysis_policy": {"$ref": "urn:visual-skill:analysis-policy:v0.1.0"},
+    "user_controls": {"$ref": "#/$defs/UserControls"},
+    "runtime_safety": {"$ref": "#/$defs/RuntimeSafetyPolicy"}
+  },
+  "$defs": {
+    "UserFacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "location": {"type": "string", "minLength": 1},
+        "date": {"type": "string", "minLength": 1},
+        "people_relationships": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+      }
+    },
+    "UserContent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["copy"],
+      "properties": {
+        "language": {"type": "string", "minLength": 2},
+        "copy": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "title": {"type": "string"},
+            "subtitle": {"type": "string"},
+            "caption": {"type": "string"}
+          }
+        }
+      }
+    },
+    "Observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "value", "confidence"],
+      "properties": {
+        "path": {"$ref": "urn:visual-skill:common:v0.1.0#/$defs/SemanticPath"},
+        "value": {},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1}
+      }
+    },
+    "Inference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "value", "confidence", "basis"],
+      "properties": {
+        "path": {"$ref": "urn:visual-skill:common:v0.1.0#/$defs/SemanticPath"},
+        "value": {},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "basis": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "urn:visual-skill:common:v0.1.0#/$defs/SemanticPath"},
+          "uniqueItems": true
+        },
+        "explanation": {"type": "string"}
+      }
+    },
+    "Unknown": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "reason"],
+      "properties": {
+        "path": {"$ref": "urn:visual-skill:common:v0.1.0#/$defs/SemanticPath"},
+        "reason": {"type": "string", "minLength": 1}
+      }
+    },
+    "PhotoAnalysis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["analysis_id", "observations", "inferences", "unknowns"],
+      "properties": {
+        "analysis_id": {"type": "string", "minLength": 1},
+        "observations": {"type": "array", "items": {"$ref": "#/$defs/Observation"}},
+        "inferences": {"type": "array", "items": {"$ref": "#/$defs/Inference"}},
+        "unknowns": {"type": "array", "items": {"$ref": "#/$defs/Unknown"}}
+      }
+    },
+    "UserControls": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["creative_intensity", "text_mode", "typography_rendering", "aspect_ratio"],
+      "properties": {
+        "creative_intensity": {"type": "number", "minimum": 0, "maximum": 1},
+        "text_mode": {"enum": ["none", "auto", "custom"]},
+        "typography_rendering": {"enum": ["model", "postprocess", "none"]},
+        "aspect_ratio": {"enum": ["1:1", "3:2", "2:3", "4:5", "5:4", "16:9", "9:16"]}
+      }
+    },
+    "RuntimeSafetyPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policy_id", "blocked", "reasons", "overrides"],
+      "properties": {
+        "policy_id": {"type": "string", "minLength": 1},
+        "blocked": {"type": "boolean"},
+        "reasons": {"type": "array", "items": {"type": "string"}},
+        "overrides": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "value", "reason"],
+            "properties": {
+              "path": {"type": "string", "pattern": "^plan\\."},
+              "value": {},
+              "reason": {"type": "string", "minLength": 1}
+            }
+          }
+        }
+      }
+    }
+  }
+}

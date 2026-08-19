@@ -1,0 +1,199 @@
+{
+  "spec_version": "0.1.0",
+  "metadata": {
+    "id": "travel-editorial",
+    "name": "Travel Editorial",
+    "version": "0.1.0",
+    "description": "Turns a travel photo into a restrained editorial memory page while preserving source facts.",
+    "tags": ["travel", "editorial", "preserve"]
+  },
+  "provenance": {
+    "origin": "original",
+    "commercial_use_basis": "Original first-party specification and visual system.",
+    "source_refs": []
+  },
+  "experiment_metadata": {
+    "role": "candidate",
+    "experiment_id": "skill-value-v0"
+  },
+  "family": "preserve",
+  "input_profile": {
+    "min_images": 1,
+    "max_images": 1,
+    "accepted_content": ["travel", "city", "street", "landscape", "portrait"]
+  },
+  "analysis_requirements": {
+    "observation_paths": [
+      "subject.people_count",
+      "composition.subject_occupancy",
+      "composition.negative_space_ratio",
+      "composition.spatial_relationships",
+      "color.dominant"
+    ],
+    "inference_paths": [
+      "scene.type",
+      "scene.location",
+      "mood.tone",
+      "lighting.condition"
+    ]
+  },
+  "defaults": {
+    "objective": "Create a quiet editorial travel memory that remains recognizably grounded in the source photograph.",
+    "composition": {
+      "layout": "asymmetric-photo-led",
+      "negative_space_strategy": "retain-native-quiet-areas",
+      "subject_scale": 0.5
+    },
+    "visual": {
+      "color_strategy": "source-palette-with-one-accent",
+      "accent_color": "warm-red",
+      "texture": "subtle-uncoated-paper",
+      "lighting": "preserve-source-light",
+      "mood": "observant-and-quiet",
+      "graphic_marks": ["fine-rule"]
+    },
+    "typography": {
+      "mode": "auto",
+      "rendering": "model",
+      "language": "en"
+    },
+    "output": {
+      "aspect_ratio": "2:3",
+      "quality_tier": "standard",
+      "format": "jpeg",
+      "background": "opaque"
+    },
+    "notes": ["Do not invent logos, coordinates, dates, locations, or relationships."]
+  },
+  "applicability": {
+    "requirements": [
+      {
+        "requirement_id": "travel-scene",
+        "path": "analysis.inferences.scene.type",
+        "op": "in",
+        "value": ["travel", "city", "street", "landscape"],
+        "severity": "required",
+        "weight": 0.7,
+        "reason": "The scene supports a travel or city narrative.",
+        "on_unknown": "not_applicable"
+      },
+      {
+        "requirement_id": "usable-negative-space",
+        "path": "analysis.observations.composition.negative_space_ratio",
+        "op": "gte",
+        "value": 0.15,
+        "severity": "preferred",
+        "weight": 0.3,
+        "reason": "The source provides usable editorial negative space.",
+        "on_unknown": "conditional"
+      }
+    ],
+    "thresholds": {
+      "applicable_min": 0.85,
+      "conditional_min": 0.6
+    }
+  },
+  "preservation": [
+    {
+      "constraint_id": "keep-person-identity",
+      "target": {"domain": "subject", "path": "subject.identity", "subject_ref": "primary-person"},
+      "strength": "hard",
+      "description": "Keep the primary person's identity and recognizable facial features."
+    },
+    {
+      "constraint_id": "keep-landmark",
+      "target": {"domain": "scene", "path": "scene.landmark"},
+      "strength": "hard",
+      "description": "Keep recognizable architecture and landmark silhouettes."
+    },
+    {
+      "constraint_id": "keep-spatial-relations",
+      "target": {"domain": "composition", "path": "composition.spatial_relationships"},
+      "strength": "soft",
+      "description": "Retain the relationship between person, street, and buildings."
+    }
+  ],
+  "transformation": [
+    {
+      "constraint_id": "editorial-reframe",
+      "target": {"domain": "composition", "path": "composition.framing"},
+      "mode": "required",
+      "description": "Reframe the source into an intentional editorial page."
+    },
+    {
+      "constraint_id": "paper-surface",
+      "target": {"domain": "material", "path": "material.texture"},
+      "mode": "required",
+      "description": "Introduce a restrained printed-paper surface."
+    },
+    {
+      "constraint_id": "optional-copy",
+      "target": {"domain": "typography", "path": "typography.content"},
+      "mode": "allowed",
+      "description": "Use only user-provided copy."
+    }
+  ],
+  "visual_system": {
+    "palette": ["source-derived neutrals", "one warm or cool accent"],
+    "materials": ["uncoated paper", "light print grain"],
+    "graphic_language": ["asymmetric grid", "fine rules", "small editorial labels"]
+  },
+  "rules": [
+    {
+      "rule_id": "large-negative-space",
+      "priority": 100,
+      "description": "Use the quiet area as an editorial field.",
+      "when": {"path": "analysis.observations.composition.negative_space_ratio", "op": "gte", "value": 0.4},
+      "then": [
+        {"op": "set", "path": "plan.composition.layout", "value": "photo-anchor-with-quiet-field"},
+        {"op": "append", "path": "plan.visual.graphic_marks", "value": "small-location-label"}
+      ]
+    },
+    {
+      "rule_id": "human-scale",
+      "priority": 120,
+      "description": "Keep people legible without turning the result into a poster portrait.",
+      "when": {"path": "analysis.observations.subject.people_count", "op": "gte", "value": 1},
+      "then": [
+        {"op": "set", "path": "plan.composition.subject_scale", "value": 0.42}
+      ]
+    },
+    {
+      "rule_id": "cool-accent-for-red-source",
+      "priority": 140,
+      "when": {"path": "analysis.observations.color.dominant", "op": "eq", "value": "red"},
+      "then": [
+        {"op": "set", "path": "plan.visual.accent_color", "value": "muted-blue"}
+      ]
+    },
+    {
+      "rule_id": "high-creative-texture",
+      "priority": 160,
+      "when": {"path": "controls.creative_intensity", "op": "gt", "value": 0.7},
+      "then": [
+        {"op": "set", "path": "plan.visual.texture", "value": "layered-uncoated-paper-with-light-registration-shift"}
+      ]
+    }
+  ],
+  "renderer_requirements": {
+    "mode": "image_edit",
+    "high_fidelity_input": true,
+    "transparent_background": false
+  },
+  "evaluation": {
+    "quality_weights": {
+      "identity_preservation": 0.2,
+      "scene_fidelity": 0.2,
+      "composition": 0.2,
+      "style_consistency": 0.15,
+      "text_accuracy": 0.1,
+      "artifact_control": 0.1,
+      "aesthetic_quality": 0.05
+    },
+    "pass_threshold": 3.8,
+    "hard_fail_targets": [
+      {"domain": "subject", "path": "subject.identity", "subject_ref": "primary-person"},
+      {"domain": "scene", "path": "scene.landmark"}
+    ]
+  }
+}

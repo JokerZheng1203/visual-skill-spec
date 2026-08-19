@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:visual-skill:renderer-request:v0.1.0",
+  "title": "RendererRequest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["adapter_id", "provider", "endpoint", "model", "input_image_role", "prompt", "typography_strategy", "size", "quality", "output_format", "background"],
+  "properties": {
+    "adapter_id": {"const": "openai.gpt-image-2"},
+    "provider": {"const": "openai"},
+    "endpoint": {"enum": ["/v1/images/edits", "/v1/images/generations"]},
+    "model": {"const": "gpt-image-2-2026-04-21"},
+    "input_image_role": {"enum": ["source_photo", "none"]},
+    "prompt": {"type": "string", "minLength": 1},
+    "typography_strategy": {"enum": ["model", "postprocess", "none"]},
+    "postprocess": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["language", "title", "subtitle"],
+      "properties": {
+        "language": {"type": "string"},
+        "title": {"type": "string"},
+        "subtitle": {"type": "string"}
+      }
+    },
+    "size": {"type": "string", "pattern": "^\\d+x\\d+$"},
+    "quality": {"enum": ["low", "medium", "high"]},
+    "output_format": {"enum": ["png", "jpeg", "webp"]},
+    "output_compression": {"type": "integer", "minimum": 0, "maximum": 100},
+    "background": {"enum": ["opaque", "auto"]}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"output_format": {"const": "png"}}},
+      "then": {"properties": {"output_compression": false}}
+    },
+    {
+      "if": {"properties": {"output_format": {"enum": ["jpeg", "webp"]}}},
+      "then": {
+        "properties": {"output_compression": {"type": "integer", "minimum": 0, "maximum": 100}},
+        "required": ["output_compression"]
+      }
+    },
+    {
+      "if": {"properties": {"typography_strategy": {"const": "postprocess"}}},
+      "then": {
+        "properties": {
+          "postprocess": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["language", "title", "subtitle"],
+            "properties": {
+              "language": {"type": "string"},
+              "title": {"type": "string"},
+              "subtitle": {"type": "string"}
+            }
+          }
+        },
+        "required": ["postprocess"]
+      },
+      "else": {"properties": {"postprocess": false}}
+    }
+  ]
+}

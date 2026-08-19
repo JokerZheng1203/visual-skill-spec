@@ -1,0 +1,7 @@
+{
+  "profile_id": "reference-balanced-v0",
+  "minimum_confidence": {
+    "observation": 0.5,
+    "inference": 0.6
+  }
+}

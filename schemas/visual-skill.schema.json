@@ -1,0 +1,249 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:visual-skill:definition:v0.1.0",
+  "title": "VisualSkill",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "spec_version",
+    "metadata",
+    "provenance",
+    "family",
+    "input_profile",
+    "analysis_requirements",
+    "defaults",
+    "applicability",
+    "preservation",
+    "transformation",
+    "visual_system",
+    "rules",
+    "renderer_requirements",
+    "evaluation"
+  ],
+  "properties": {
+    "spec_version": {"const": "0.1.0"},
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "version", "description", "tags"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"},
+        "name": {"type": "string", "minLength": 1},
+        "version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+        "description": {"type": "string", "minLength": 1},
+        "tags": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["origin", "commercial_use_basis", "source_refs"],
+      "properties": {
+        "origin": {"enum": ["original", "licensed", "public_domain"]},
+        "commercial_use_basis": {"type": "string", "minLength": 1},
+        "source_refs": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+      }
+    },
+    "experiment_metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role"],
+      "properties": {
+        "role": {"enum": ["candidate", "baseline", "control"]},
+        "experiment_id": {"type": "string", "minLength": 1}
+      }
+    },
+    "family": {"enum": ["preserve", "reimagine"]},
+    "input_profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min_images", "max_images", "accepted_content"],
+      "properties": {
+        "min_images": {"type": "integer", "minimum": 1},
+        "max_images": {"type": "integer", "minimum": 1},
+        "accepted_content": {"type": "array", "minItems": 1, "items": {"type": "string"}, "uniqueItems": true}
+      }
+    },
+    "analysis_requirements": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["observation_paths", "inference_paths"],
+      "properties": {
+        "observation_paths": {
+          "type": "array",
+          "items": {"$ref": "urn:visual-skill:common:v0.1.0#/$defs/SemanticPath"},
+          "uniqueItems": true
+        },
+        "inference_paths": {
+          "type": "array",
+          "items": {"$ref": "urn:visual-skill:common:v0.1.0#/$defs/SemanticPath"},
+          "uniqueItems": true
+        }
+      }
+    },
+    "defaults": {"$ref": "#/$defs/PlanDecisions"},
+    "applicability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requirements", "thresholds"],
+      "properties": {
+        "requirements": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["requirement_id", "path", "op", "value", "severity", "weight", "reason", "on_unknown"],
+            "properties": {
+              "requirement_id": {"type": "string", "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"},
+              "path": {"type": "string", "minLength": 1},
+              "op": {"enum": ["eq", "neq", "gt", "gte", "lt", "lte", "in", "not_in"]},
+              "value": {},
+              "severity": {"enum": ["required", "preferred"]},
+              "weight": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
+              "reason": {"type": "string", "minLength": 1},
+              "on_unknown": {"enum": ["not_applicable", "conditional", "ignore"]}
+            }
+          }
+        },
+        "thresholds": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["applicable_min", "conditional_min"],
+          "properties": {
+            "applicable_min": {"type": "number", "minimum": 0, "maximum": 1},
+            "conditional_min": {"type": "number", "minimum": 0, "maximum": 1}
+          }
+        }
+      }
+    },
+    "preservation": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["constraint_id", "target", "strength"],
+        "properties": {
+          "constraint_id": {"type": "string", "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"},
+          "target": {"$ref": "urn:visual-skill:common:v0.1.0#/$defs/TargetRef"},
+          "strength": {"enum": ["hard", "soft"]},
+          "description": {"type": "string"}
+        }
+      }
+    },
+    "transformation": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["constraint_id", "target", "mode"],
+        "properties": {
+          "constraint_id": {"type": "string", "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"},
+          "target": {"$ref": "urn:visual-skill:common:v0.1.0#/$defs/TargetRef"},
+          "mode": {"enum": ["required", "allowed"]},
+          "description": {"type": "string"}
+        }
+      }
+    },
+    "visual_system": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["palette", "materials", "graphic_language"],
+      "properties": {
+        "palette": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "materials": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "graphic_language": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+      }
+    },
+    "rules": {"type": "array", "items": {"$ref": "urn:visual-skill:common:v0.1.0#/$defs/Rule"}},
+    "renderer_requirements": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "high_fidelity_input", "transparent_background"],
+      "properties": {
+        "mode": {"enum": ["image_edit", "image_generation"]},
+        "high_fidelity_input": {"type": "boolean"},
+        "transparent_background": {"const": false}
+      }
+    },
+    "evaluation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["quality_weights", "pass_threshold", "hard_fail_targets"],
+      "properties": {
+        "quality_weights": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["identity_preservation", "scene_fidelity", "composition", "style_consistency", "text_accuracy", "artifact_control", "aesthetic_quality"],
+          "properties": {
+            "identity_preservation": {"type": "number", "minimum": 0, "maximum": 1},
+            "scene_fidelity": {"type": "number", "minimum": 0, "maximum": 1},
+            "composition": {"type": "number", "minimum": 0, "maximum": 1},
+            "style_consistency": {"type": "number", "minimum": 0, "maximum": 1},
+            "text_accuracy": {"type": "number", "minimum": 0, "maximum": 1},
+            "artifact_control": {"type": "number", "minimum": 0, "maximum": 1},
+            "aesthetic_quality": {"type": "number", "minimum": 0, "maximum": 1}
+          }
+        },
+        "pass_threshold": {"type": "number", "minimum": 1, "maximum": 5},
+        "hard_fail_targets": {"type": "array", "items": {"$ref": "urn:visual-skill:common:v0.1.0#/$defs/TargetRef"}}
+      }
+    }
+  },
+  "$defs": {
+    "PlanDecisions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["objective", "composition", "visual", "typography", "output", "notes"],
+      "properties": {
+        "objective": {"type": "string", "minLength": 1},
+        "composition": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["layout", "negative_space_strategy", "subject_scale"],
+          "properties": {
+            "layout": {"type": "string", "minLength": 1},
+            "negative_space_strategy": {"type": "string", "minLength": 1},
+            "subject_scale": {"type": "number", "minimum": 0, "maximum": 1}
+          }
+        },
+        "visual": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["color_strategy", "accent_color", "texture", "lighting", "mood", "graphic_marks"],
+          "properties": {
+            "color_strategy": {"type": "string", "minLength": 1},
+            "accent_color": {"type": "string", "minLength": 1},
+            "texture": {"type": "string", "minLength": 1},
+            "lighting": {"type": "string", "minLength": 1},
+            "mood": {"type": "string", "minLength": 1},
+            "graphic_marks": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+          }
+        },
+        "typography": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "rendering", "language"],
+          "properties": {
+            "mode": {"enum": ["none", "auto", "custom"]},
+            "rendering": {"enum": ["model", "postprocess", "none"]},
+            "language": {"type": "string", "minLength": 2},
+            "title": {"type": "string"},
+            "subtitle": {"type": "string"}
+          }
+        },
+        "output": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["aspect_ratio", "quality_tier", "format", "background"],
+          "properties": {
+            "aspect_ratio": {"enum": ["1:1", "3:2", "2:3", "4:5", "5:4", "16:9", "9:16"]},
+            "quality_tier": {"enum": ["draft", "standard", "final"]},
+            "format": {"enum": ["png", "jpeg", "webp"]},
+            "background": {"enum": ["opaque", "auto"]}
+          }
+        },
+        "notes": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+      }
+    }
+  }
+}

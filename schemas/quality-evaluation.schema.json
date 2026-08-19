@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:visual-skill:quality-evaluation:v0.1.0",
+  "title": "QualityEvaluation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["output_id", "skill_id", "skill_version", "metrics", "normalized_weights", "hard_failures", "weighted_score", "passed"],
+  "properties": {
+    "output_id": {"type": "string", "minLength": 1},
+    "skill_id": {"type": "string", "minLength": 1},
+    "skill_version": {"type": "string", "minLength": 1},
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["identity_preservation", "scene_fidelity", "composition", "style_consistency", "text_accuracy", "artifact_control", "aesthetic_quality"],
+      "properties": {
+        "identity_preservation": {"$ref": "#/$defs/Metric"},
+        "scene_fidelity": {"$ref": "#/$defs/Metric"},
+        "composition": {"$ref": "#/$defs/Metric"},
+        "style_consistency": {"$ref": "#/$defs/Metric"},
+        "text_accuracy": {"$ref": "#/$defs/Metric"},
+        "artifact_control": {"$ref": "#/$defs/Metric"},
+        "aesthetic_quality": {"$ref": "#/$defs/Metric"}
+      }
+    },
+    "normalized_weights": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "identity_preservation": {"type": "number", "minimum": 0, "maximum": 1},
+        "scene_fidelity": {"type": "number", "minimum": 0, "maximum": 1},
+        "composition": {"type": "number", "minimum": 0, "maximum": 1},
+        "style_consistency": {"type": "number", "minimum": 0, "maximum": 1},
+        "text_accuracy": {"type": "number", "minimum": 0, "maximum": 1},
+        "artifact_control": {"type": "number", "minimum": 0, "maximum": 1},
+        "aesthetic_quality": {"type": "number", "minimum": 0, "maximum": 1}
+      }
+    },
+    "hard_failures": {"type": "array", "items": {"type": "string"}},
+    "weighted_score": {"type": "number", "minimum": 1, "maximum": 5},
+    "passed": {"type": "boolean"}
+  },
+  "$defs": {
+    "Metric": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["score"],
+          "properties": {"score": {"type": "number", "minimum": 1, "maximum": 5}, "note": {"type": "string"}}
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["not_applicable_reason"],
+          "properties": {"not_applicable_reason": {"type": "string", "minLength": 1}}
+        }
+      ]
+    }
+  }
+}

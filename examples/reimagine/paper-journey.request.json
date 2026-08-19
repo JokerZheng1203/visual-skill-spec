@@ -1,0 +1,32 @@
+{
+  "user_facts": {},
+  "user_content": {"copy": {}},
+  "photo_analysis": {
+    "analysis_id": "analysis-reimagine-001",
+    "observations": [
+      {"path": "composition.spatial_relationships", "value": "road leads from foreground to mountains", "confidence": 0.95},
+      {"path": "color.dominant", "value": "blue-green", "confidence": 0.9}
+    ],
+    "inferences": [
+      {"path": "scene.type", "value": "landscape", "confidence": 0.96, "basis": ["composition.spatial_relationships"]},
+      {"path": "mood.tone", "value": "quiet", "confidence": 0.81, "basis": ["color.dominant"]}
+    ],
+    "unknowns": [{"path": "scene.location", "reason": "No location evidence is visible."}]
+  },
+  "analysis_policy": {
+    "profile_id": "reference-balanced-v0",
+    "minimum_confidence": {"observation": 0.5, "inference": 0.6}
+  },
+  "user_controls": {
+    "creative_intensity": 0.9,
+    "text_mode": "none",
+    "typography_rendering": "none",
+    "aspect_ratio": "1:1"
+  },
+  "runtime_safety": {
+    "policy_id": "reference-image-safety-v0",
+    "blocked": false,
+    "reasons": [],
+    "overrides": []
+  }
+}
