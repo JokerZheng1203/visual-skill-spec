@@ -1,0 +1,45 @@
+{
+  "policy_id": "gate1-quality-v1",
+  "version": "1.0.0",
+  "frozen": true,
+  "metric_weights": {
+    "identity_preservation": 0.2,
+    "scene_fidelity": 0.2,
+    "composition": 0.2,
+    "style_consistency": 0.15,
+    "text_accuracy": 0.1,
+    "artifact_control": 0.1,
+    "aesthetic_quality": 0.05
+  },
+  "pass_threshold": 3.8,
+  "hard_failure_taxonomy": [
+    "HF_IDENTITY_MAJOR_CHANGE",
+    "HF_PERSON_ADDED_REMOVED",
+    "HF_LANDMARK_MAJOR_CORRUPTION",
+    "HF_FALSE_LOCATION_OR_DATE",
+    "HF_FALSE_RELATIONSHIP",
+    "HF_TITLE_MATERIAL_ERROR",
+    "HF_SEVERE_ANATOMY_ARTIFACT",
+    "HF_SEVERE_TEXT_GIBBERISH",
+    "HF_UNUSABLE_OUTPUT"
+  ],
+  "hard_fail_targets": [
+    {
+      "domain": "subject",
+      "path": "subject.identity",
+      "subject_ref": "primary-person"
+    },
+    {
+      "domain": "scene",
+      "path": "scene.landmark"
+    }
+  ],
+  "na_policy": "renormalize",
+  "metric_aggregation": "median",
+  "na_aggregation": {
+    "raters_per_output": 3,
+    "na_votes_required": 2,
+    "otherwise": "median_of_valid_numeric_ratings"
+  },
+  "hard_failure_policy_source": "evals/gate1/policies/hard-failure-taxonomy.json"
+}

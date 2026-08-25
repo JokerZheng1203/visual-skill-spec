@@ -1,4 +1,5 @@
-dataset/images/
-runs/*/outputs/
 private/
+dataset/private/
+runs/
+ratings/private/
 credentials/

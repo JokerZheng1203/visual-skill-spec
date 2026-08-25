@@ -1,6 +1,8 @@
 # Plain Travel Editorial Control v1
 
-状态：Draft，必须在 holdout 生成前冻结并记录 SHA-256。
+状态：Dev Starting Version。允许与 Candidate 相同的最多 2 轮 dev revision；dev 结束后必须冻结最终 version 与 SHA-256，之后才能开始 holdout。
+
+允许的 revision 仅限全局静态 wording、Prompt structure，以及一般性的 preservation、editorial、typography instruction。不得读取 PhotoAnalysis、CreativePlan、ApplicabilityResult 或 Skill Rules，不得加入 photo-specific condition，也不得人工为单张照片补 Prompt。单次异常输出不能触发修改；必须在至少 2 个不同 dev photo 出现同类问题，或由同一照片的诊断性独立再生成复现。
 
 以下模板是强静态 Prompt control。它可以使用用户明确提供的事实和文案，但不得读取 PhotoAnalysis、ApplicabilityResult、CreativePlan 或 Skill Rules。
 

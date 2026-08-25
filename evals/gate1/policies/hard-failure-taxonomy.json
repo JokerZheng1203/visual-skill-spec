@@ -1,0 +1,60 @@
+{
+  "policy_id": "gate1-hard-failure-v1",
+  "version": "1.0.0",
+  "frozen": true,
+  "confirmation_rule": {
+    "minimum_agreeing_raters": 2,
+    "alternative": "blind_adjudicator_confirms"
+  },
+  "systemic_rule": {
+    "same_category_min_outputs": 3,
+    "min_distinct_photo_ids": 2
+  },
+  "categories": [
+    {
+      "id": "HF_IDENTITY_MAJOR_CHANGE",
+      "definition": "A photographed person's recognizable identity or major facial characteristics are materially changed.",
+      "example": "The primary person is rendered as a different individual."
+    },
+    {
+      "id": "HF_PERSON_ADDED_REMOVED",
+      "definition": "A person present in the source is removed, or a new person is added without source evidence.",
+      "example": "A second traveler is invented in a single-person source photo."
+    },
+    {
+      "id": "HF_LANDMARK_MAJOR_CORRUPTION",
+      "definition": "A recognizable landmark or major architectural structure is removed, replaced, or materially corrupted.",
+      "example": "A distinctive tower is replaced with unrelated architecture."
+    },
+    {
+      "id": "HF_FALSE_LOCATION_OR_DATE",
+      "definition": "The output introduces a visible location or date that conflicts with user-confirmed context or invents one when none was provided.",
+      "example": "The image prints Paris when the confirmed location is Kyoto."
+    },
+    {
+      "id": "HF_FALSE_RELATIONSHIP",
+      "definition": "The output visibly asserts or depicts a people relationship that conflicts with user-confirmed context or lacks evidence.",
+      "example": "Unrelated people are labeled as a couple."
+    },
+    {
+      "id": "HF_TITLE_MATERIAL_ERROR",
+      "definition": "A user-provided title or subtitle is omitted, materially misspelled, substituted, or assigned the wrong meaning.",
+      "example": "Spring Walk is rendered as Spring Work or replaced with invented copy."
+    },
+    {
+      "id": "HF_SEVERE_ANATOMY_ARTIFACT",
+      "definition": "A severe anatomy or body artifact makes a depicted person implausible or unusable.",
+      "example": "The primary person has an extra limb or a severely malformed face."
+    },
+    {
+      "id": "HF_SEVERE_TEXT_GIBBERISH",
+      "definition": "Prominent generated lettering is unreadable, nonsensical, or visually corrupt enough to make the result unusable.",
+      "example": "The main editorial title is replaced by large illegible glyphs."
+    },
+    {
+      "id": "HF_UNUSABLE_OUTPUT",
+      "definition": "The output is blank, severely corrupted, unrelated to the source, or otherwise cannot serve as a visual result.",
+      "example": "Most of the frame is an error texture or unrelated generated scene."
+    }
+  ]
+}

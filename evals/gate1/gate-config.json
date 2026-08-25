@@ -2,10 +2,60 @@
   "gate_id": "gate1-v0",
   "status": "design_draft",
   "spec_version": "0.1.0",
+  "privacy": {
+    "git_history_real_derivatives_allowed": false,
+    "private_artifacts": [
+      "original_images",
+      "generated_images",
+      "user_facts",
+      "user_content",
+      "photo_analysis",
+      "creative_plan",
+      "renderer_request",
+      "provider_prompt",
+      "raw_provider_response",
+      "provider_credentials",
+      "evaluator_identity",
+      "raw_identifiable_ratings"
+    ],
+    "repo_safe_artifacts": [
+      "schemas_and_templates",
+      "gate_config",
+      "anonymous_photo_id",
+      "hashes",
+      "sanitized_generation_manifest",
+      "sanitized_ratings",
+      "aggregate_statistics",
+      "final_report"
+    ]
+  },
   "candidate": {
     "skill_id": "travel-editorial",
     "starting_version": "0.1.0",
-    "max_dev_revisions": 2
+    "max_dev_revisions": 2,
+    "final_version": null,
+    "final_sha256": null
+  },
+  "controls": {
+    "plain_prompt_starting_version": "v1",
+    "plain_prompt_max_dev_revisions": 2,
+    "allowed_revision_scope": [
+      "global_static_wording",
+      "prompt_structure",
+      "general_preservation_instruction",
+      "general_editorial_instruction",
+      "general_typography_instruction"
+    ],
+    "forbidden_inputs": [
+      "photo_analysis",
+      "creative_plan",
+      "applicability",
+      "skill_rules",
+      "photo_specific_conditions",
+      "manual_per_photo_prompt_additions"
+    ],
+    "final_version": null,
+    "final_sha256": null
   },
   "arms": [
     {
@@ -28,6 +78,15 @@
     "total_photos": 40,
     "dev_photos": 10,
     "holdout_photos": 30,
+    "intended_domain_definition": "A rights-cleared personal travel, city, street, landscape, coast, nature, or travel-portrait photo deliberately selected by Dataset Design before Candidate applicability is evaluated.",
+    "intended_domain_definition_frozen": true,
+    "all_gate_holdout_photos_intended_domain": true,
+    "intended_domain_assignments_frozen": false,
+    "split_seed": 20260825,
+    "scene_group_isolation": true,
+    "capture_session_isolation": true,
+    "preferred_max_contributor_holdout_share": 0.25,
+    "hard_max_contributor_holdout_share": 0.4,
     "holdout_strata": {
       "single_person_travel_city": 8,
       "two_or_more_people": 4,
@@ -42,7 +101,15 @@
     "max_technical_retries": 1,
     "planned_dev_outputs": 30,
     "planned_holdout_outputs": 180,
-    "best_of_selection": false
+    "best_of_selection": false,
+    "order_seed": 20260825,
+    "interleave_dimensions": ["photo_id", "arm_id", "replicate"],
+    "single_anomalous_dev_output_can_trigger_revision": false,
+    "revision_evidence": {
+      "minimum_distinct_dev_photos_with_same_issue": 2,
+      "or_independent_reproduction_on_same_photo": true,
+      "extra_dev_replication_requires_reason": true
+    }
   },
   "evaluation": {
     "contrasts": [
@@ -51,13 +118,93 @@
     ],
     "planned_holdout_pairs_per_contrast": 60,
     "raters_per_pair": 3,
+    "quality_raters_per_output": 3,
+    "min_unique_raters": 9,
+    "min_target_user_raters": 6,
+    "recommended_unique_raters": [9, 12],
+    "max_pairs_per_rater": 50,
+    "prevent_same_rater_seeing_both_replicates_of_photo": true,
+    "assignment_seed": 20260825,
+    "pair_side_randomization_seed": 20260825,
     "quality_scale": [1, 5],
-    "cluster_bootstrap_key": "photo_id"
+    "metric_aggregation": "median",
+    "na_aggregation": {
+      "na_votes_required_out_of_3": 2,
+      "otherwise": "median_of_valid_numeric_ratings"
+    },
+    "bootstrap": {
+      "cluster_key": "photo_id",
+      "iterations": 10000,
+      "seed": 20260825,
+      "ci_level": 0.95,
+      "ci_method": "percentile"
+    }
+  },
+  "quality_policy": {
+    "source": "evals/gate1/policies/gate1-quality-policy.json",
+    "policy_id": "gate1-quality-v1",
+    "frozen": true
+  },
+  "hard_failure_policy": {
+    "source": "evals/gate1/policies/hard-failure-taxonomy.json",
+    "policy_id": "gate1-hard-failure-v1",
+    "frozen": true
+  },
+  "provider_incident_policy": {
+    "run_invalid_reasons": [
+      "provider_wide_incident",
+      "credential_failure",
+      "runner_bug_affecting_all_arms"
+    ],
+    "requires_evidence_of_cross_arm_impact": true,
+    "candidate_specific_failure_counts_as_candidate_technical_failure": true,
+    "invalid_run_gate_result": "INVALID"
+  },
+  "metric_definitions": {
+    "applicability_coverage": {
+      "numerator": "candidate intended-domain photo-replicates classified applicable or conditional",
+      "denominator": "all intended-domain candidate photo-replicates; not_applicable remains in denominator"
+    },
+    "conditional_rate": {
+      "numerator": "candidate intended-domain photo-replicates classified conditional",
+      "denominator": "all intended-domain candidate photo-replicates"
+    },
+    "technical_success_rate": {
+      "numerator": "logical generation units that eventually return valid provider output after allowed retry",
+      "denominator": "logical generation units that should have sent a provider request; not_applicable and safety_blocked are excluded",
+      "reported_per_arm": true
+    },
+    "end_to_end_satisfied_rate": {
+      "numerator": "candidate outputs passing frozen Gate 1 Quality Policy with no confirmed hard failure",
+      "denominator": "all intended-domain candidate photo-replicates; not_applicable, safety_blocked, technical failure, and quality failure remain in denominator"
+    },
+    "rendered_satisfied_rate": {
+      "numerator": "candidate outputs passing frozen Gate 1 Quality Policy with no confirmed hard failure",
+      "denominator": "successfully rendered candidate outputs"
+    },
+    "confirmed_hard_failure_rate": {
+      "numerator": "successfully rendered candidate outputs with a confirmed hard failure",
+      "denominator": "successfully rendered candidate outputs"
+    },
+    "requests_per_satisfied_output": {
+      "numerator": "candidate provider attempts including retries",
+      "denominator": "satisfied candidate outputs",
+      "zero_satisfied_result": "Infinity"
+    },
+    "cost_per_satisfied_output": {
+      "numerator": "all candidate provider charges including retries",
+      "denominator": "satisfied candidate outputs",
+      "zero_satisfied_result": "Infinity"
+    },
+    "candidate_win_share": {
+      "numerator": "candidate wins plus 0.5 times ties",
+      "denominator": "all valid blind decisions"
+    }
   },
   "pass_thresholds": {
     "applicability_coverage_min": 0.85,
     "technical_success_rate_min": 0.95,
-    "candidate_satisfied_output_rate_min": 0.6,
+    "candidate_end_to_end_satisfied_rate_min": 0.6,
     "candidate_hard_failure_rate_max": 0.1,
     "candidate_vs_plain_prompt_win_share_min": 0.6,
     "candidate_vs_simple_effect_win_share_min": 0.65,
