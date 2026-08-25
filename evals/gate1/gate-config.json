@@ -1,6 +1,5 @@
 {
   "gate_id": "gate1-v0",
-  "status": "design_draft",
   "spec_version": "0.1.0",
   "privacy": {
     "git_history_real_derivatives_allowed": false,
@@ -79,7 +78,6 @@
     "intended_domain_definition": "A rights-cleared personal travel, city, street, landscape, coast, nature, or travel-portrait photo deliberately selected by Dataset Design before Candidate applicability is evaluated.",
     "intended_domain_definition_frozen": true,
     "all_gate_holdout_photos_intended_domain": true,
-    "intended_domain_assignments_frozen": false,
     "split_seed": 20260825,
     "scene_group_isolation": true,
     "capture_session_isolation": true,
