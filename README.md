@@ -48,6 +48,8 @@ result.renderer_request;
 ## 目录
 
 - `docs/visual-skill-spec-v0.1.md`：中文规范正文。
+- `docs/gate1-real-skill-prototype-evaluation-plan.md`：真实照片 Skill Prototype 与盲评 Gate 计划。
+- `evals/gate1/`：Gate 1 机器配置、Plain Prompt control 与私有数据边界。
 - `schemas/`：JSON Schema 2020-12 公共契约。
 - `profiles/`：可替换的 AnalysisPolicy 参考配置。
 - `src/index.mjs`：Reference Implementation 公共入口。

@@ -1,0 +1,68 @@
+{
+  "gate_id": "gate1-v0",
+  "status": "design_draft",
+  "spec_version": "0.1.0",
+  "candidate": {
+    "skill_id": "travel-editorial",
+    "starting_version": "0.1.0",
+    "max_dev_revisions": 2
+  },
+  "arms": [
+    {
+      "arm_id": "candidate_skill",
+      "role": "candidate",
+      "source": "examples/preserve/travel-editorial.skill.json"
+    },
+    {
+      "arm_id": "plain_prompt_control",
+      "role": "control",
+      "source": "evals/gate1/controls/plain-travel-editorial-v1.prompt.md"
+    },
+    {
+      "arm_id": "simple_effect_baseline",
+      "role": "baseline",
+      "source": "examples/baseline/simple-film/simple-film.skill.json"
+    }
+  ],
+  "dataset": {
+    "total_photos": 40,
+    "dev_photos": 10,
+    "holdout_photos": 30,
+    "holdout_strata": {
+      "single_person_travel_city": 8,
+      "two_or_more_people": 4,
+      "city_street_architecture_no_primary_person": 8,
+      "landscape_coast_nature": 6,
+      "night_low_light_low_quality": 4
+    }
+  },
+  "generation": {
+    "dev_replicates": 1,
+    "holdout_replicates": 2,
+    "max_technical_retries": 1,
+    "planned_dev_outputs": 30,
+    "planned_holdout_outputs": 180,
+    "best_of_selection": false
+  },
+  "evaluation": {
+    "contrasts": [
+      ["candidate_skill", "plain_prompt_control"],
+      ["candidate_skill", "simple_effect_baseline"]
+    ],
+    "planned_holdout_pairs_per_contrast": 60,
+    "raters_per_pair": 3,
+    "quality_scale": [1, 5],
+    "cluster_bootstrap_key": "photo_id"
+  },
+  "pass_thresholds": {
+    "applicability_coverage_min": 0.85,
+    "technical_success_rate_min": 0.95,
+    "candidate_satisfied_output_rate_min": 0.6,
+    "candidate_hard_failure_rate_max": 0.1,
+    "candidate_vs_plain_prompt_win_share_min": 0.6,
+    "candidate_vs_simple_effect_win_share_min": 0.65,
+    "win_share_ci_lower_bound_min": 0.5,
+    "requests_per_satisfied_output_max": 2.5
+  },
+  "frozen": false
+}
