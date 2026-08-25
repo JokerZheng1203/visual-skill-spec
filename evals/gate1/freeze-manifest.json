@@ -2,35 +2,123 @@
   "manifest_version": "1.0.0",
   "gate_id": "gate1-v0",
   "design_freeze": {
-    "status": "pending",
-    "completed_at": null,
+    "status": "complete",
+    "completed_at": "2026-08-25T11:04:15.969Z",
     "required_before": "dev_generation",
     "artifacts": [
-      {"artifact_id": "gate1_design_plan", "path": "docs/gate1-real-skill-prototype-evaluation-plan.md", "version": "gate1-v0", "sha256": null},
-      {"artifact_id": "gate_config", "path": "evals/gate1/gate-config.json", "version": "gate1-v0", "sha256": null},
-      {"artifact_id": "quality_policy", "path": "evals/gate1/policies/gate1-quality-policy.json", "version": "1.0.0", "sha256": null},
-      {"artifact_id": "hard_failure_policy", "path": "evals/gate1/policies/hard-failure-taxonomy.json", "version": "1.0.0", "sha256": null},
-      {"artifact_id": "dataset_manifest_template", "path": "evals/gate1/templates/dataset-manifest.example.jsonl", "version": "1.0.0", "sha256": null},
-      {"artifact_id": "generation_manifest_template", "path": "evals/gate1/templates/generation-manifest.example.jsonl", "version": "1.0.0", "sha256": null},
-      {"artifact_id": "pair_assignment_template", "path": "evals/gate1/templates/pair-assignment-manifest.example.jsonl", "version": "1.0.0", "sha256": null},
-      {"artifact_id": "ratings_template", "path": "evals/gate1/templates/ratings.example.jsonl", "version": "1.0.0", "sha256": null},
-      {"artifact_id": "candidate_skill_starting_version", "path": "examples/preserve/travel-editorial.skill.json", "version": "0.1.0", "sha256": "e66d4ed71730042107d872517c2a5e7faba46fbff7d186afb5c41127a616027d"},
-      {"artifact_id": "plain_prompt_starting_version", "path": "evals/gate1/controls/plain-travel-editorial-v1.prompt.md", "version": "v1", "sha256": null}
+      {
+        "artifact_id": "gate1_design_plan",
+        "path": "docs/gate1-real-skill-prototype-evaluation-plan.md",
+        "version": "gate1-v0",
+        "sha256": "2794b87487f70b5422005e394718f83a970d5ee971679e95ecddb4d98401e0e2"
+      },
+      {
+        "artifact_id": "gate_config",
+        "path": "evals/gate1/gate-config.json",
+        "version": "gate1-v0",
+        "sha256": "ffea66173610a4f76f3584416c416d67e2022913f4cb4ba63a16ea15091266af"
+      },
+      {
+        "artifact_id": "quality_policy",
+        "path": "evals/gate1/policies/gate1-quality-policy.json",
+        "version": "1.0.0",
+        "sha256": "3aa3e77f667c6af72e059d7fc60c3e9b20bf5dcb5fb3b1ad10f8756e233ee0fd"
+      },
+      {
+        "artifact_id": "hard_failure_policy",
+        "path": "evals/gate1/policies/hard-failure-taxonomy.json",
+        "version": "1.0.0",
+        "sha256": "afd5df95953ae6141e2dc8e72474d4a6d4ef7c4ced4c0fc6f40061149e59198f"
+      },
+      {
+        "artifact_id": "dataset_manifest_template",
+        "path": "evals/gate1/templates/dataset-manifest.example.jsonl",
+        "version": "1.0.0",
+        "sha256": "99df3c094ef94968cda8c58fb295e18d0e0c9291d5fa150a62ecc7fbd0774c83"
+      },
+      {
+        "artifact_id": "generation_manifest_template",
+        "path": "evals/gate1/templates/generation-manifest.example.jsonl",
+        "version": "1.0.0",
+        "sha256": "ae3f6a6145b0fe9e0d41b18457b092c42838c4ca93d2883a23c0245dba20e208"
+      },
+      {
+        "artifact_id": "pair_assignment_template",
+        "path": "evals/gate1/templates/pair-assignment-manifest.example.jsonl",
+        "version": "1.0.0",
+        "sha256": "2284336fd8119b4916ae8e5b21e4de525f689a299b65ab2a75f6cb3664bb1604"
+      },
+      {
+        "artifact_id": "ratings_template",
+        "path": "evals/gate1/templates/ratings.example.jsonl",
+        "version": "1.0.0",
+        "sha256": "42f095570d60d75156dfc155abae48dfd39d608dfb56cbb7c18cfff710b98885"
+      },
+      {
+        "artifact_id": "candidate_skill_starting_version",
+        "path": "examples/preserve/travel-editorial.skill.json",
+        "version": "0.1.0",
+        "sha256": "e66d4ed71730042107d872517c2a5e7faba46fbff7d186afb5c41127a616027d"
+      },
+      {
+        "artifact_id": "plain_prompt_starting_version",
+        "path": "evals/gate1/controls/plain-travel-editorial-v1.prompt.md",
+        "version": "v1",
+        "sha256": "fc8e7b8cd539a941431f4b20221287c6fdea04debf3c37448fc646144313fc59"
+      }
     ]
   },
   "holdout_freeze": {
     "status": "pending",
     "completed_at": null,
     "required_before": "holdout_generation",
-    "prerequisites": ["design_freeze.complete", "dev_complete"],
+    "prerequisites": [
+      "design_freeze.complete",
+      "dev_complete"
+    ],
     "artifacts": [
-      {"artifact_id": "candidate_skill_final", "path": null, "version": null, "sha256": null},
-      {"artifact_id": "plain_prompt_final", "path": null, "version": null, "sha256": null},
-      {"artifact_id": "simple_effect_baseline", "path": "examples/baseline/simple-film/simple-film.skill.json", "version": "0.1.0", "sha256": null},
-      {"artifact_id": "sanitized_dataset_manifest", "path": "evals/gate1/manifests/sanitized/dataset-manifest.jsonl", "version": null, "sha256": null},
-      {"artifact_id": "analysis_policy", "path": "profiles/reference-balanced.analysis-policy.json", "version": "reference-balanced-v0", "sha256": null},
-      {"artifact_id": "renderer_adapter", "path": "src/adapters/openai-gpt-image-2.mjs", "version": "openai.gpt-image-2", "sha256": null},
-      {"artifact_id": "provider_model_snapshot", "path": null, "version": "gpt-image-2-2026-04-21", "sha256": null}
+      {
+        "artifact_id": "candidate_skill_final",
+        "path": null,
+        "version": null,
+        "sha256": null
+      },
+      {
+        "artifact_id": "plain_prompt_final",
+        "path": null,
+        "version": null,
+        "sha256": null
+      },
+      {
+        "artifact_id": "simple_effect_baseline",
+        "path": "examples/baseline/simple-film/simple-film.skill.json",
+        "version": "0.1.0",
+        "sha256": null
+      },
+      {
+        "artifact_id": "sanitized_dataset_manifest",
+        "path": "evals/gate1/manifests/sanitized/dataset-manifest.jsonl",
+        "version": null,
+        "sha256": null
+      },
+      {
+        "artifact_id": "analysis_policy",
+        "path": "profiles/reference-balanced.analysis-policy.json",
+        "version": "reference-balanced-v0",
+        "sha256": null
+      },
+      {
+        "artifact_id": "renderer_adapter",
+        "path": "src/adapters/openai-gpt-image-2.mjs",
+        "version": "openai.gpt-image-2",
+        "sha256": null
+      },
+      {
+        "artifact_id": "provider_model_snapshot",
+        "path": null,
+        "version": "gpt-image-2-2026-04-21",
+        "sha256": null
+      }
     ]
   }
 }

@@ -2,7 +2,7 @@
 
 规范性计划见 [Gate 1：Real Skill Prototype & Evaluation Plan](../../docs/gate1-real-skill-prototype-evaluation-plan.md)。
 
-当前状态：`design_draft`。Gate 1 使用 `freeze-manifest.json` 管理两个独立冻结点：Design Freeze 完成前不得开始 dev；dev 选定最终 Candidate 与 Control 后，还必须完成 Holdout Freeze，才能开始 holdout。
+当前状态：Design Freeze 已于 `2026-08-25T11:04:15.969Z` 完成并通过校验；真实 Dev Dataset 尚未收集，Dev Generation 未开始。dev 选定最终 Candidate 与 Control 后，还必须完成 Holdout Freeze，才能开始 holdout。
 
 ## Private Artifacts
 
@@ -55,8 +55,8 @@ quality rating.output_id → generation.output_id → arm_id
 
 ## 下一步
 
-1. 执行 Design Freeze Review，在 `freeze-manifest.json` 记录全部必需 hash 并将 `design_freeze.status` 设为 `complete`；
-2. 按 template 收集并授权 10 张 dev 照片；
-3. 为 dev 照片创建 private UserFacts / UserContent / PhotoAnalysis；
-4. 在不修改 Core/Runtime/Adapter/Schema 的前提下完成 Candidate 与 Control 的同等级 dev 优化，并选择版本化最终 artifacts；
-5. 执行 Holdout Freeze Review，完成后才开始 holdout generation。
+1. 收集并授权 10 张 rights-cleared Dev 照片；
+2. 在 `dataset/private/dataset-manifest.jsonl` 记录 Dev manifest 并运行 Dataset validator；
+3. 为每张 Dev 照片分别创建 private UserFacts / UserContent / PhotoAnalysis 并运行 Scene Card validator；
+4. 校验全部通过后，才进入 Candidate 与 Control 的同等级 Dev Prototype；
+5. dev 选定最终 artifacts 后执行 Holdout Freeze Review，完成后才开始 holdout generation。

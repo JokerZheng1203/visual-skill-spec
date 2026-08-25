@@ -14,6 +14,10 @@
   "scripts": {
     "validate": "node src/validate.mjs",
     "test": "node --test",
+    "gate1:freeze:check": "node scripts/gate1-freeze.mjs design --check",
+    "gate1:freeze:write": "node scripts/gate1-freeze.mjs design --write",
+    "gate1:dataset:check": "node scripts/validate-gate1-dataset.mjs",
+    "gate1:scene-cards:check": "node scripts/validate-gate1-scene-cards.mjs",
     "publish": "node scripts/git-publish.mjs"
   },
   "dependencies": {
