@@ -25,10 +25,12 @@ VisualSkill + UserFacts + UserContent + PhotoAnalysis
 npm install
 npm run validate
 npm test
+npm run publish
 ```
 
 - `npm run validate`：校验 Preserve、Reimagine 与 Baseline 示例、编译 CreativePlan，并校验 Renderer 请求。
 - `npm test`：运行 Schema、语义冲突、applicability、确定性和快照测试。
+- `npm run publish`：自动生成 Conventional Commit 提交信息，提交本地变更并推送当前分支到 GitHub。
 
 宿主应用通过 Reference Runtime 执行完整但不联网的管线：
 
