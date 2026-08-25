@@ -1,0 +1,35 @@
+{
+  "manifest_version": "1.0.0",
+  "gate_id": "gate1-v0",
+  "design_freeze": {
+    "status": "pending",
+    "completed_at": null,
+    "required_before": "dev_generation",
+    "artifacts": [
+      {"artifact_id": "gate1_design_plan", "path": "docs/gate1-real-skill-prototype-evaluation-plan.md", "version": "gate1-v0", "sha256": null},
+      {"artifact_id": "gate_config", "path": "evals/gate1/gate-config.json", "version": "gate1-v0", "sha256": null},
+      {"artifact_id": "quality_policy", "path": "evals/gate1/policies/gate1-quality-policy.json", "version": "1.0.0", "sha256": null},
+      {"artifact_id": "hard_failure_policy", "path": "evals/gate1/policies/hard-failure-taxonomy.json", "version": "1.0.0", "sha256": null},
+      {"artifact_id": "dataset_manifest_template", "path": "evals/gate1/templates/dataset-manifest.example.jsonl", "version": "1.0.0", "sha256": null},
+      {"artifact_id": "generation_manifest_template", "path": "evals/gate1/templates/generation-manifest.example.jsonl", "version": "1.0.0", "sha256": null},
+      {"artifact_id": "pair_assignment_template", "path": "evals/gate1/templates/pair-assignment-manifest.example.jsonl", "version": "1.0.0", "sha256": null},
+      {"artifact_id": "ratings_template", "path": "evals/gate1/templates/ratings.example.jsonl", "version": "1.0.0", "sha256": null},
+      {"artifact_id": "plain_prompt_starting_version", "path": "evals/gate1/controls/plain-travel-editorial-v1.prompt.md", "version": "v1", "sha256": null}
+    ]
+  },
+  "holdout_freeze": {
+    "status": "pending",
+    "completed_at": null,
+    "required_before": "holdout_generation",
+    "prerequisites": ["design_freeze.complete", "dev_complete"],
+    "artifacts": [
+      {"artifact_id": "candidate_skill_final", "path": null, "version": null, "sha256": null},
+      {"artifact_id": "plain_prompt_final", "path": null, "version": null, "sha256": null},
+      {"artifact_id": "simple_effect_baseline", "path": "examples/baseline/simple-film/simple-film.skill.json", "version": "0.1.0", "sha256": null},
+      {"artifact_id": "sanitized_dataset_manifest", "path": "evals/gate1/manifests/sanitized/dataset-manifest.jsonl", "version": null, "sha256": null},
+      {"artifact_id": "analysis_policy", "path": "profiles/reference-balanced.analysis-policy.json", "version": "reference-balanced-v0", "sha256": null},
+      {"artifact_id": "renderer_adapter", "path": "src/adapters/openai-gpt-image-2.mjs", "version": "openai.gpt-image-2", "sha256": null},
+      {"artifact_id": "provider_model_snapshot", "path": null, "version": "gpt-image-2-2026-04-21", "sha256": null}
+    ]
+  }
+}

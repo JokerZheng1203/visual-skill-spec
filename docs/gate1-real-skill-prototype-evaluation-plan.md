@@ -39,6 +39,15 @@ Repo-safe Artifacts 仅包括 schemas/templates、gate config、anonymous photo 
 
 **Git history 不得包含真实 UserFacts、UserContent、PhotoAnalysis、CreativePlan、RendererRequest 或 Provider Prompt。** 仓库中的此类示例只允许来自 synthetic 或现有 first-party fixtures。
 
+### 2.2 Design Freeze 与 Holdout Freeze
+
+Gate 1 使用两个独立冻结点，状态与 artifact hash 统一记录在 `evals/gate1/freeze-manifest.json`：
+
+- **Design Freeze** 必须在任何 dev generation 前完成，冻结 gate config、Quality Policy、Hard Failure Taxonomy、manifest/rating templates、denominator、threshold、随机种子、dev revision 协议和 Candidate / Control 起始版本；
+- **Holdout Freeze** 必须在 dev 完成后、任何 holdout generation 前完成，冻结最终 Candidate / Control 的 version、path 与 SHA-256，以及 baseline、sanitized dataset manifest、AnalysisPolicy、Renderer Adapter 和 provider model snapshot。
+
+dev 中产生的 Candidate 或 Control 修订必须写入新的版本化文件，不得覆盖 Design Freeze 中记录的起始 artifact。两个 freeze 都只有在对应 artifact 字段完整、hash 已记录且状态为 `complete` 时生效；Design Freeze 不能替代 Holdout Freeze。
+
 ## 3. 实验 Arms
 
 | Arm | 类型 | 输入与处理 | 目的 |
@@ -83,7 +92,7 @@ Plain Prompt Control 获得与 Candidate 相同的最多两轮 dev revision。�
 - 同类型问题出现在至少 2 个不同 dev `photo_id`；
 - 同一照片的诊断性独立再生成能够复现。
 
-诊断性再生成不计入固定 30 个 dev outputs，但必须记录 `reason_for_extra_dev_replication`。dev 结束后同时冻结并记录：
+诊断性再生成不计入固定 30 个 dev outputs，但必须记录 `reason_for_extra_dev_replication`。dev 结束后选择并记录以下最终 artifact，随后通过 Holdout Freeze 固化：
 
 ```text
 candidate_skill_version
@@ -172,13 +181,15 @@ Dataset manifest 还必须包含 `scene_group_id`、`capture_session_id` 和匿�
 
 每个请求记录：
 
-- `run_id`、`photo_id`、arm、replicate；
+- `run_id`、`photo_id`、arm、replicate 和稳定唯一的 `output_id`；
 - Skill version 或 control prompt hash；
 - AnalysisPolicy、CreativePlan 和 RendererRequest hash；
 - provider model snapshot；
 - started/completed time、latency、request status；
 - retry count、错误码和实际成本；
 - output SHA-256。
+
+每个成功生成结果必须分配非空 `output_id`；未生成有效输出的 logical unit 将 `output_id` 记为 `null`。同一 manifest 内，`output_id` 必须全局唯一，且 `(run_id, photo_id, arm_id, replicate)` 必须唯一。任何重试仍属于同一 logical unit，不得因 retry 创建新的输出身份。
 
 Provider 输出不保证像素级确定性，因此两个 replicate 用于测量方差，不用于挑选最佳结果。CreativePlan、rule trace、diagnostics 和 RendererRequest 必须对相同输入保持完全一致。
 
@@ -238,7 +249,28 @@ Repo-safe rating 只记录 `rater_id_anonymous`、`target_user` 和 `assignment_
 
 同时记录最多两个原因标签：身份、场景、构图、风格、文字、伪影、审美、其他。
 
-### 7.2 Quality ratings
+### 7.2 Pair Assignment manifest
+
+左右随机化和评价者分配必须先写入独立 Pair Assignment manifest。每条记录至少包含：`pair_id`、`contrast_id`、`photo_id`、`replicate`、`left_output_id`、`right_output_id`、匿名展示 ID、匿名 rater assignment、assignment seed、pair-side randomization seed 和 assignment status。
+
+确定性 Join 固定为：
+
+```text
+pairwise rating.pair_id
+→ pair assignment.left_output_id / right_output_id
+→ generation manifest.output_id
+→ generation manifest.arm_id
+
+quality rating.output_id
+→ generation manifest.output_id
+→ generation manifest.arm_id
+```
+
+`pair_id` 在 Pair Assignment manifest 中必须唯一；每个非空 `left_output_id` / `right_output_id` 必须恰好匹配一条成功 generation record，且同一 pair 的两侧不得引用同一个 `output_id`。评分记录不得自行复制 arm 或左右 output 映射作为事实来源。
+
+为保持盲态，包含 output-to-arm 映射的 Pair Assignment manifest 在评分锁定前属于 private artifact；评分锁定后只能导出匿名且去除直接 arm 暴露的 sanitized 版本。
+
+### 7.3 Quality ratings
 
 每个输出使用 1–5 分评价：
 
@@ -265,7 +297,7 @@ Hard failure taxonomy 在 `gate1-hard-failure-v1` 中冻结。Confirmed hard fai
 
 Systemic hard failure 预定义为：同一 hard-failure category 出现在至少 3 个输出，并覆盖至少 2 个不同 `photo_id`。不得在查看结果后重新解释“系统性”。
 
-### 7.3 Intent，不是行为
+### 7.4 Intent，不是行为
 
 可额外询问：
 
@@ -289,7 +321,9 @@ candidate_win_share =
 candidate wins / (candidate wins + comparator wins)
 ```
 
-95% confidence interval 必须按 `photo_id` cluster bootstrap，保留同一照片的 replicates 和评价者相关性。不得把所有评价点击当成完全独立样本。
+95% confidence interval 必须按 `photo_id` cluster bootstrap。该方法以照片为重采样单位，保留同一照片内的 replicates 与 ratings 依赖，不得把所有评价点击当成完全独立样本。
+
+这不是 rater-cluster bootstrap，也不能完整建模同一 rater 评价多个不同 `photo_id` 产生的跨照片相关性。Balanced assignment 只能降低单一 rater 过度集中的风险，不能消除该限制；最终报告必须明确披露，不得声称置信区间已控制全部 rater correlation。
 
 报告必须同时列出 planned pairs、valid pairs 和缺失原因。不得通过排除 not_applicable 或 technical failure 提高表面 win share；applicability coverage 与 technical success 是独立硬门槛。
 
@@ -427,10 +461,11 @@ ci_method = percentile
 
 | 阶段 | 工作 | 退出条件 |
 |---|---|---|
-| G1.0 Freeze | 冻结配置、独立 Quality Policy、Hard Failure Taxonomy、数据字段、denominator 和随机参数 | Gate config hash 可记录，`frozen=true` |
+| G1.0 Design Freeze | 冻结设计、policies、templates、denominator、threshold、seed、revision 协议和起始 artifacts | `freeze-manifest.design_freeze.status=complete`，全部必需 hash 已记录 |
 | G1.1 Dataset | 收集、授权、脱敏并分层 40 张图 | manifest 完整；10/30 split 冻结 |
 | G1.2 Scene Cards | 生成并校验 UserFacts / PhotoAnalysis | 40/40 可通过 CompileRequest 边界 |
-| G1.3 Dev Prototype | 生成 30 个固定 dev 输出；Candidate 与 Control 各最多两轮同等级修订 | 两者 version 与 SHA-256 同时冻结 |
+| G1.3 Dev Prototype | 生成 30 个固定 dev 输出；Candidate 与 Control 各最多两轮同等级修订 | 最终 Candidate / Control artifacts 已选定并版本化 |
+| G1.3b Holdout Freeze | 冻结最终 Candidate / Control、baseline、dataset、AnalysisPolicy、Adapter 和模型快照 | `freeze-manifest.holdout_freeze.status=complete`，全部必需 hash 已记录 |
 | G1.4 Holdout Generate | 生成最多 180 个计划输出 | generation manifest 完整，无挑图 |
 | G1.5 Blind Eval | 120 pairs × 至少 3 ratings | 评分完整、盲态未破坏 |
 | G1.6 Report | 聚合质量、偏好、可靠性和成本 | PASS / ITERATE / STOP 单一结论 |
@@ -442,6 +477,7 @@ ci_method = percentile
 ```text
 evals/gate1/
 ├── gate-config.json
+├── freeze-manifest.json
 ├── README.md
 ├── controls/
 │   └── plain-travel-editorial-v1.prompt.md
@@ -451,6 +487,7 @@ evals/gate1/
 ├── templates/
 │   ├── dataset-manifest.example.jsonl
 │   ├── generation-manifest.example.jsonl
+│   ├── pair-assignment-manifest.example.jsonl
 │   └── ratings.example.jsonl
 ├── dataset/private/
 ├── manifests/sanitized/
@@ -481,11 +518,17 @@ evals/gate1/
 [ ] generation order、pair side、assignment、bootstrap seeds 冻结
 [ ] provider-wide incident policy 冻结
 [ ] PASS / ITERATE / STOP thresholds 保持预注册
-[ ] Freeze Review 记录配置与 policy hashes
-[ ] 设置 `gate-config.frozen = true`
-[ ] 之后才开始 10 张 dev 数据收集与生成
+[ ] Design Freeze Review 已记录全部必需 artifact hashes
+[ ] `freeze-manifest.design_freeze.status = complete`
+[ ] 只在 Design Freeze 完成后开始 10 张 dev 数据收集与生成
+[ ] generation manifest 的成功输出均有唯一 `output_id`
+[ ] pairwise / quality ratings 可通过 manifests 确定性 Join 至唯一 arm
+[ ] dev 后最终 Candidate / Control artifacts 已选定并版本化
+[ ] Holdout Freeze Review 已记录全部必需 artifact hashes
+[ ] `freeze-manifest.holdout_freeze.status = complete`
+[ ] 只在 Holdout Freeze 完成后开始 holdout generation
 [ ] 实际成本记录方式确认
 [ ] 不存在手工挑图或未记录重试路径
 ```
 
-当前下一动作是 G1.0 Freeze Review：审核本计划、`gate-config.json`、两个 frozen policies 和 synthetic templates，记录 hashes 后将 `gate-config.frozen` 设为 `true`。此时不应继续抽象 Visual Skill Spec，也不得开始 holdout generation。
+当前下一动作是 G1.0 Design Freeze Review：审核本计划、`gate-config.json`、两个 frozen policies 和 synthetic templates，在 `freeze-manifest.json` 记录 hashes 并将 `design_freeze.status` 设为 `complete`。完成后才能开始 dev；dev 选定最终 Candidate / Control 后还必须完成独立 Holdout Freeze，才能开始 holdout generation。

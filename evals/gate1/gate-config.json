@@ -16,7 +16,8 @@
       "raw_provider_response",
       "provider_credentials",
       "evaluator_identity",
-      "raw_identifiable_ratings"
+      "raw_identifiable_ratings",
+      "pair_assignment_manifest_before_rating_lock"
     ],
     "repo_safe_artifacts": [
       "schemas_and_templates",
@@ -24,6 +25,7 @@
       "anonymous_photo_id",
       "hashes",
       "sanitized_generation_manifest",
+      "sanitized_pair_assignment_manifest",
       "sanitized_ratings",
       "aggregate_statistics",
       "final_report"
@@ -32,9 +34,7 @@
   "candidate": {
     "skill_id": "travel-editorial",
     "starting_version": "0.1.0",
-    "max_dev_revisions": 2,
-    "final_version": null,
-    "final_sha256": null
+    "max_dev_revisions": 2
   },
   "controls": {
     "plain_prompt_starting_version": "v1",
@@ -53,9 +53,7 @@
       "skill_rules",
       "photo_specific_conditions",
       "manual_per_photo_prompt_additions"
-    ],
-    "final_version": null,
-    "final_sha256": null
+    ]
   },
   "arms": [
     {
@@ -137,7 +135,9 @@
       "iterations": 10000,
       "seed": 20260825,
       "ci_level": 0.95,
-      "ci_method": "percentile"
+      "ci_method": "percentile",
+      "correlation_scope": "Preserves dependence among replicates and ratings within the same photo_id cluster.",
+      "rater_correlation_scope": "Does not model cross-photo dependence created when the same rater evaluates multiple photo_ids; balanced assignment limits concentration but does not remove this limitation."
     }
   },
   "quality_policy": {
@@ -211,5 +211,9 @@
     "win_share_ci_lower_bound_min": 0.5,
     "requests_per_satisfied_output_max": 2.5
   },
-  "frozen": false
+  "freeze": {
+    "manifest": "evals/gate1/freeze-manifest.json",
+    "design_freeze_required_before": "dev_generation",
+    "holdout_freeze_required_before": "holdout_generation"
+  }
 }
